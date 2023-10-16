@@ -1,0 +1,8 @@
+/node_modules
+/lib
+/builds
+/.env
+/**Versions.json
+
+# IDE files
+/.idea

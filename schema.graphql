@@ -1,0 +1,51 @@
+enum Blockchain {
+  eth
+  polygon
+  bsc
+}
+
+enum ContractType {
+  erc20
+  erc721
+  erc1155
+}
+
+type NftCollectionEntity @entity {
+  id: ID!
+  address: String! @index
+  blockchain: Blockchain! @index
+  contractType: ContractType
+  type: ContractType
+  owner: String
+  symbol: String
+  name: String
+  description: String
+  image: String
+  externalLink: String
+  uri: String
+  raw: JSON
+  baseUri: String
+  nfts: [NftEntity] @derivedFrom(field: "nftCollection")
+}
+
+type NftEntity @entity {
+  id: ID!
+  tokenId: BigInt! @index
+  name: String
+  description: String
+  image: String
+  animation: String
+  attributes: JSON
+  uri: String
+  raw: JSON
+  nftCollection: NftCollectionEntity!
+  transfers: [NftTransferEntity] @derivedFrom(field: "nft")
+}
+
+type NftTransferEntity @entity {
+  id: ID!
+  nft: NftEntity!
+  fromAddress: String! @index
+  toAddress: String! @index
+  amount: BigInt! @index
+}
