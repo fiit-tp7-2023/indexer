@@ -68,6 +68,9 @@ export const functions = {
     transferFrom: new Func<[from: string, to: string, tokenId: bigint], {from: string, to: string, tokenId: bigint}, []>(
         abi, '0x23b872dd'
     ),
+    contractURI: new Func<[], {}, string>(
+        abi, '0xe8a3d485'
+    ),
 }
 
 export class Contract extends ContractBase {
@@ -118,5 +121,9 @@ export class Contract extends ContractBase {
 
     totalSupply(): Promise<bigint> {
         return this.eth_call(functions.totalSupply, [])
+    }
+
+    contractURI(): Promise<string> {
+        return this.eth_call(functions.contractURI, [])
     }
 }

@@ -13,7 +13,10 @@ import * as erc721 from './abi/erc721'
 import { Blockchain } from './model'
 
 export const CONTRACT_ADDRESS = '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D'.toLowerCase()
+// export const CONTRACT_ADDRESS = '0x17eD38f5F519C6ED563BE6486e629041Bed3dfbC'.toLowerCase() // 13974723
 export const BLOCKCHAIN = Blockchain.eth
+
+
 
 export const processor = new EvmBatchProcessor()
     .setDataSource({
@@ -32,7 +35,9 @@ export const processor = new EvmBatchProcessor()
         address: [CONTRACT_ADDRESS],
         topic0: [erc721.events.Transfer.topic]
     })
-
+interface Cache{
+    a: string
+}
 export type Fields = EvmBatchProcessorFields<typeof processor>
 export type Context = DataHandlerContext<Store, Fields>
 export type Block = BlockHeader<Fields>

@@ -281,5 +281,19 @@ export const ABI_JSON = [
                 "name": ""
             }
         ]
+    },
+    {
+        "type": "function",
+        "name": "contractURI",
+        "constant": true,
+        "stateMutability": "pure",
+        "payable": false,
+        "inputs": [],
+        "outputs": [
+            {
+                "type": "string",
+                "name": ""
+            }
+        ]
     }
 ]
