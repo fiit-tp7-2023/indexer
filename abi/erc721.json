@@ -431,20 +431,5 @@
       ],
       "stateMutability": "pure",
       "type": "function"
-    },
-    {
-      "inputs":[
-         
-      ],
-      "name":"baseURI",
-      "outputs":[
-         {
-            "internalType":"string",
-            "name":"",
-            "type":"string"
-         }
-      ],
-      "stateMutability":"view",
-      "type":"function"
-   }
+    }
   ]

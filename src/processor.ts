@@ -8,12 +8,15 @@ import {
     Transaction as _Transaction,
 } from '@subsquid/evm-processor'
 import {Store} from '@subsquid/typeorm-store'
-import * as erc20 from './abi/erc20'
 import * as erc721 from './abi/erc721'
 import { Blockchain } from './model'
 
-export const CONTRACT_ADDRESS = '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D'.toLowerCase()
-// export const CONTRACT_ADDRESS = '0x17eD38f5F519C6ED563BE6486e629041Bed3dfbC'.toLowerCase() // 13974723
+
+export const CONTRACT_ADDRESSES: Map<string, string> = new Map([
+    ['0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D'.toLowerCase(), 'Bored-apes'], //12287507
+    ['0x17eD38f5F519C6ED563BE6486e629041Bed3dfbC'.toLowerCase(), 'PXQuest'] // 13974723
+])
+
 export const BLOCKCHAIN = Blockchain.eth
 
 
@@ -32,12 +35,11 @@ export const processor = new EvmBatchProcessor()
         }
     })
     .addLog({
-        address: [CONTRACT_ADDRESS],
+        address:[...CONTRACT_ADDRESSES.keys()],
         topic0: [erc721.events.Transfer.topic]
     })
-interface Cache{
-    a: string
-}
+
+
 export type Fields = EvmBatchProcessorFields<typeof processor>
 export type Context = DataHandlerContext<Store, Fields>
 export type Block = BlockHeader<Fields>

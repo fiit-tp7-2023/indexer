@@ -1,6 +1,6 @@
 import Axios from 'axios'
 import {Context} from '../processor'
-export const GATEWAY_URL = "https://nftstorage.link/QmeSjSinHpPnmXmspMjwiXyN6zS4E9zccariGR3jxcaWtq"
+export const GATEWAY_URL = "https://nftstorage.link/"
 export const GATEWAY_NUMBER_OF_RETRIES = 6
 
 
@@ -9,6 +9,16 @@ export interface ContractMetadata {
     description?: string
     image?: string
     external_link?: string
+}
+
+
+export interface TokenMetadata {
+    name?: string
+    description?: string
+    image?: string
+    external_url?: string,
+    animation_url?: string
+    attributes?: JSON
 }
 
 
@@ -29,15 +39,28 @@ export function replaceIpfsUrl(url: string): string{
   }
 
 
-export async function parseContractMetadata(ctx: Context, contractURI: string): Promise<ContractMetadata|null>{
+export async function parseContractMetadata(ctx: Context, contractUri: string): Promise<ContractMetadata|null>{
     try{
-        const { status, data } = await api.get(replaceIpfsUrl(contractURI))
+        const { status, data } = await api.get(replaceIpfsUrl(contractUri))
         if (status < 400) {
             return data
         }
         return null
     } catch (e) {
-        ctx.log.warn(`ContractMetadata ERROR ${contractURI}  ${(e as Error).message}`)
+        ctx.log.warn(`ContractMetadata ERROR ${contractUri}  ${(e as Error).message}`)
+        return null
+    }
+}
+
+export async function parseTokenMetadata(ctx: Context, tokenUri: string): Promise<TokenMetadata|null>{
+    try{
+        const { status, data } = await api.get(replaceIpfsUrl(tokenUri))
+        if (status < 400) {
+            return data
+        }
+        return null
+    } catch (e) {
+        ctx.log.warn(`TokenMetadata ERROR ${tokenUri}  ${(e as Error).message}`)
         return null
     }
 }
