@@ -41,6 +41,9 @@ export const functions = {
     allowance: new Func<[_owner: string, _spender: string], {_owner: string, _spender: string}, bigint>(
         abi, '0xdd62ed3e'
     ),
+    contractURI: new Func<[], {}, string>(
+        abi, '0xe8a3d485'
+    ),
 }
 
 export class Contract extends ContractBase {
@@ -67,5 +70,9 @@ export class Contract extends ContractBase {
 
     allowance(_owner: string, _spender: string): Promise<bigint> {
         return this.eth_call(functions.allowance, [_owner, _spender])
+    }
+
+    contractURI(): Promise<string> {
+        return this.eth_call(functions.contractURI, [])
     }
 }

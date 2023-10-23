@@ -34,7 +34,8 @@ type NftEntity @entity {
   name: String
   description: String
   image: String
-  animation: String
+  animationUrl: String
+  externalUrl: String
   attributes: JSON
   uri: String
   raw: JSON

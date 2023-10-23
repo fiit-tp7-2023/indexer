@@ -26,7 +26,10 @@ export class NftEntity {
     image!: string | undefined | null
 
     @Column_("text", {nullable: true})
-    animation!: string | undefined | null
+    animationUrl!: string | undefined | null
+
+    @Column_("text", {nullable: true})
+    externalUrl!: string | undefined | null
 
     @Column_("jsonb", {nullable: true})
     attributes!: unknown | undefined | null

@@ -44,6 +44,9 @@ export const functions = {
     uri: new Func<[id: bigint], {id: bigint}, string>(
         abi, '0x0e89341c'
     ),
+    contractURI: new Func<[], {}, string>(
+        abi, '0xe8a3d485'
+    ),
 }
 
 export class Contract extends ContractBase {
@@ -66,5 +69,9 @@ export class Contract extends ContractBase {
 
     uri(id: bigint): Promise<string> {
         return this.eth_call(functions.uri, [id])
+    }
+
+    contractURI(): Promise<string> {
+        return this.eth_call(functions.contractURI, [])
     }
 }
