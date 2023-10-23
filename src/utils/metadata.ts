@@ -45,6 +45,7 @@ export async function parseContractMetadata(ctx: Context, contractUri: string): 
         if (status < 400) {
             return data
         }
+        ctx.log.warn(`ContractMetadata ERROR ${contractUri} status: ${status}, data: ${data}`)
         return null
     } catch (e) {
         ctx.log.warn(`ContractMetadata ERROR ${contractUri}  ${(e as Error).message}`)
@@ -58,6 +59,7 @@ export async function parseTokenMetadata(ctx: Context, tokenUri: string): Promis
         if (status < 400) {
             return data
         }
+        ctx.log.warn(`TokenMetadata ERROR ${tokenUri} status: ${status}, data: ${data}`)
         return null
     } catch (e) {
         ctx.log.warn(`TokenMetadata ERROR ${tokenUri}  ${(e as Error).message}`)
