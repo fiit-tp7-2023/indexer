@@ -9,6 +9,7 @@ import {
 } from '@subsquid/evm-processor'
 import {Store} from '@subsquid/typeorm-store'
 import * as erc721 from './abi/erc721'
+import * as erc1155 from './abi/erc1155'
 import { Blockchain } from './model'
 
 
@@ -37,6 +38,10 @@ export const processor = new EvmBatchProcessor()
     .addLog({
         address:[...CONTRACT_ADDRESSES.keys()],
         topic0: [erc721.events.Transfer.topic]
+    })
+    .addLog({
+        address:[...CONTRACT_ADDRESSES.keys()],
+        topic0: [erc1155.events.TransferSingle.topic, erc1155.events.TransferBatch.topic]
     })
 
 

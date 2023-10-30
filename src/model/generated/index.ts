@@ -1,5 +1,7 @@
 export * from "./nftCollectionEntity.model"
 export * from "./_blockchain"
 export * from "./_contractType"
+export * from "./tokenCollectionEntity.model"
 export * from "./nftEntity.model"
 export * from "./nftTransferEntity.model"
+export * from "./tokenTransferEntity.model"

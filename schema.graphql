@@ -15,7 +15,6 @@ type NftCollectionEntity @entity {
   address: String! @index
   blockchain: Blockchain! @index
   contractType: ContractType
-  type: ContractType
   owner: String
   symbol: String
   name: String
@@ -26,6 +25,21 @@ type NftCollectionEntity @entity {
   raw: JSON
   baseUri: String
   nfts: [NftEntity] @derivedFrom(field: "nftCollection")
+}
+
+type TokenCollectionEntity @entity {
+  id: ID!
+  address: String! @index
+  blockchain: Blockchain! @index
+  contractType: ContractType
+  owner: String
+  symbol: String
+  name: String
+  decimals: BigInt
+  logo: String
+  thumbnail: String
+  raw: JSON
+  transfers: [TokenTransferEntity] @derivedFrom(field: "token")
 }
 
 type NftEntity @entity {
@@ -46,6 +60,14 @@ type NftEntity @entity {
 type NftTransferEntity @entity {
   id: ID!
   nft: NftEntity!
+  fromAddress: String! @index
+  toAddress: String! @index
+  amount: BigInt! @index
+}
+
+type TokenTransferEntity @entity {
+  id: ID!
+  token: TokenCollectionEntity!
   fromAddress: String! @index
   toAddress: String! @index
   amount: BigInt! @index
