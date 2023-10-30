@@ -1,11 +1,12 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
+import * as marshal from "./marshal"
 import {Blockchain} from "./_blockchain"
 import {ContractType} from "./_contractType"
-import {NftEntity} from "./nftEntity.model"
+import {TokenTransferEntity} from "./tokenTransferEntity.model"
 
 @Entity_()
-export class NftCollectionEntity {
-    constructor(props?: Partial<NftCollectionEntity>) {
+export class TokenCollectionEntity {
+    constructor(props?: Partial<TokenCollectionEntity>) {
         Object.assign(this, props)
     }
 
@@ -32,24 +33,18 @@ export class NftCollectionEntity {
     @Column_("text", {nullable: true})
     name!: string | undefined | null
 
-    @Column_("text", {nullable: true})
-    description!: string | undefined | null
+    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
+    decimals!: bigint | undefined | null
 
     @Column_("text", {nullable: true})
-    image!: string | undefined | null
+    logo!: string | undefined | null
 
     @Column_("text", {nullable: true})
-    externalLink!: string | undefined | null
-
-    @Column_("text", {nullable: true})
-    uri!: string | undefined | null
+    thumbnail!: string | undefined | null
 
     @Column_("jsonb", {nullable: true})
     raw!: unknown | undefined | null
 
-    @Column_("text", {nullable: true})
-    baseUri!: string | undefined | null
-
-    @OneToMany_(() => NftEntity, e => e.nftCollection)
-    nfts!: NftEntity[]
+    @OneToMany_(() => TokenTransferEntity, e => e.token)
+    transfers!: TokenTransferEntity[]
 }

@@ -2,7 +2,9 @@ import {In} from 'typeorm'
 import {TypeormDatabase} from '@subsquid/typeorm-store'
 import { v4 as uuidv4 } from 'uuid';
 import * as erc721 from './abi/erc721'
-import {ContractType, NftCollectionEntity, NftEntity, NftTransferEntity, Blockchain} from './model'
+import * as erc20 from './abi/erc20'
+import * as erc1155 from './abi/erc1155'
+import {ContractType, NftCollectionEntity, NftEntity, NftTransferEntity, Blockchain, TokenCollectionEntity, TokenTransferEntity} from './model'
 import {Block, CONTRACT_ADDRESSES, BLOCKCHAIN, Context, Log, Transaction, processor} from './processor'
 import {parseContractMetadata, ContractMetadata, parseTokenMetadata}from './utils/metadata'
 
@@ -22,26 +24,25 @@ interface TransferEvent {
 
 interface Cache {
     NftCollections: Map<string, NftCollectionEntity>,
+    TokenCollections: Map<string, TokenCollectionEntity>,
     Nfts: Map<string, NftEntity>,
-    NftTransfers: NftTransferEntity[]
+    NftTransfers: NftTransferEntity[],
+    TokenTransfers: TokenTransferEntity[]
 }
-
-
 
 
 const cache: Cache = {
     NftCollections: new Map(),
+    TokenCollections: new Map(),
     Nfts: new Map(),
-    NftTransfers: []
+    NftTransfers: [],
+    TokenTransfers: []
 }
 
 processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     let TransfersERC721: TransferEvent[] = []
-
-    cache.NftCollections.clear()
-    cache.Nfts.clear()
-    cache.NftTransfers = []
-
+    _clearCache();
+   
     const latestBlockNumber =  parseInt(await ctx._chain.client.call('eth_blockNumber'))
     for (let block of ctx.blocks) {
         for (let log of block.logs) {
@@ -59,13 +60,36 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                     contractType: ContractType.erc721
                 })
             }
+            else if(CONTRACT_ADDRESSES.has(log.address) && log.topics[0] === erc20.events.Transfer.topic && log.topics.length === 3) {
+                // TODO Handle ERC20 Transfer event
+            }
+            else if(CONTRACT_ADDRESSES.has(log.address) && log.topics[0] === erc1155.events.TransferSingle.topic){
+                // TODO Handle ERC1155 TransferSingle event
+            }
+            else if(CONTRACT_ADDRESSES.has(log.address) && log.topics[0] === erc1155.events.TransferBatch.topic){
+                // TODO handle ERC1155 TransferBatch event
+            }
         }
     }
+
+    
     await processTransfersERC721(ctx, latestBlockNumber, cache, TransfersERC721)
+
+
     await ctx.store.upsert([...cache.NftCollections.values()])
+    await ctx.store.upsert([...cache.TokenCollections.values()])
     await ctx.store.upsert([...cache.Nfts.values()])
     await ctx.store.insert(cache.NftTransfers)
+    await ctx.store.insert(cache.TokenTransfers)
 })
+
+export function _clearCache(){
+    cache.NftCollections.clear()
+    cache.Nfts.clear()
+    cache.TokenCollections.clear()
+    cache.NftTransfers = []
+    cache.TokenTransfers = []
+}
 
 
 export function* splitIntoBatches<T>(list: T[], maxBatchSize: number = 15000): Generator<T[]> {
