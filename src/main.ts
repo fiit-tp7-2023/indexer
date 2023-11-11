@@ -250,7 +250,6 @@ export async function fillContractUris(ctx: Context, latestBlockNumber: number, 
         multicall.batchSize
     )
     results.forEach((res, i) => {
-        console.log(res)
         if(res.success){
             collections[i].uri = res.value
         } else{
