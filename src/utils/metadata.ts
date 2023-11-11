@@ -6,34 +6,8 @@ export const IPFS_GATEWAYS = [
 ]
 import { NftEntity } from '../model'
 import { NftCollectionEntity } from '../model'
+import { ContractMetadata, TokenMetadata, UrisBySource, ipfsUri } from './interfaces'
 
-
-export interface ContractMetadata {
-    name?: string
-    description?: string
-    image?: string
-    externalLink?: string
-}
-
-
-export interface TokenMetadata {
-    name?: string
-    description?: string
-    image?: string
-    externalUrl?: string,
-    animationUrl?: string
-    attributes?: JSON
-}
-
-export interface ipfsUri{
-    uri: string
-    gatewayQueue: Generator<{gateway: string, isLast: boolean}>
-}
-
-export interface UrisBySource {
-    ipfsUris: ipfsUri[],
-    nonIpfsUris: Map<string, string[]>
-}
 
 const api = Axios.create({
     headers: {
