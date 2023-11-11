@@ -5,29 +5,11 @@ import * as erc721 from './abi/erc721'
 import * as erc20 from './abi/erc20'
 import * as erc1155 from './abi/erc1155'
 import {ContractType, NftCollectionEntity, NftEntity, NftTransferEntity, Blockchain, TokenCollectionEntity, TokenTransferEntity} from './model'
-import {Block, CONTRACT_ADDRESSES, BLOCKCHAIN, Context, Log, Transaction, processor} from './processor'
-import {ContractMetadata, fillNftsMetadata, fillNftCollectionsMetadata}from './utils/metadata'
+import {Block, BLOCKCHAIN, Context, Log, Transaction, processor} from './processor'
+import {fillNftsMetadata, fillNftCollectionsMetadata}from './utils/metadata'
+import { CONTRACTS_TO_INDEX } from './utils/constants';
+import { TransferEvent, Cache } from './utils/interfaces';
 
-
-interface TransferEvent {
-    id: string,
-    block: Block,
-    from: string,
-    to: string,
-    tokenIds: bigint[]
-    amounts: bigint[]
-    contractAddress: string
-    blockchain: Blockchain
-    contractType: ContractType
-}
-
-interface Cache {
-    NftCollections: Map<string, NftCollectionEntity>,
-    TokenCollections: Map<string, TokenCollectionEntity>,
-    Nfts: Map<string, NftEntity>,
-    NftTransfers: NftTransferEntity[],
-    TokenTransfers: TokenTransferEntity[]
-}
 
 
 const cache: Cache = {
@@ -45,7 +27,11 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const latestBlockNumber =  parseInt(await ctx._chain.client.call('eth_blockNumber'))
     for (let block of ctx.blocks) {
         for (let log of block.logs) {
-            if (CONTRACT_ADDRESSES.has(log.address) && log.topics[0] === erc721.events.Transfer.topic && log.topics.length === 4) {
+            if (
+                CONTRACTS_TO_INDEX.some(contract => contract.address == log.address) &&
+                log.topics[0] === erc721.events.Transfer.topic &&
+                log.topics.length === 4
+            ) {
                 const {from, to, tokenId} = erc721.events.Transfer.decode(log);
                 TransfersERC721.push({
                     id: uuidv4(),
@@ -59,13 +45,23 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                     contractType: ContractType.erc721
                 })
             }
-            else if(CONTRACT_ADDRESSES.has(log.address) && log.topics[0] === erc20.events.Transfer.topic && log.topics.length === 3) {
+            else if(
+                CONTRACTS_TO_INDEX.some(contract => contract.address == log.address) &&
+                log.topics[0] === erc20.events.Transfer.topic &&
+                log.topics.length === 3
+            ) {
                 // TODO Handle ERC20 Transfer event
             }
-            else if(CONTRACT_ADDRESSES.has(log.address) && log.topics[0] === erc1155.events.TransferSingle.topic){
+            else if(
+                CONTRACTS_TO_INDEX.some(contract => contract.address == log.address) &&
+                 log.topics[0] === erc1155.events.TransferSingle.topic
+            ) {
                 // TODO Handle ERC1155 TransferSingle event
             }
-            else if(CONTRACT_ADDRESSES.has(log.address) && log.topics[0] === erc1155.events.TransferBatch.topic){
+            else if(
+                CONTRACTS_TO_INDEX.some(contract => contract.address == log.address) &&
+                 log.topics[0] === erc1155.events.TransferBatch.topic
+            ) {
                 // TODO handle ERC1155 TransferBatch event
             }
         }
