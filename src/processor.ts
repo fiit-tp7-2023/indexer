@@ -23,7 +23,7 @@ export const processor = new EvmBatchProcessor()
         chain: `https://rpc.ankr.com/eth/${process.env.ANKR_KEY}`,
     })
     .setFinalityConfirmation(10)
-    .setBlockRange({from: 13974723, to: 13975833})
+    .setBlockRange({from: 12287507})
     .setFields({
         log: {
             topics: true,

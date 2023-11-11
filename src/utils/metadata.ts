@@ -7,6 +7,7 @@ export const IPFS_GATEWAYS = [
 import { NftEntity } from '../model'
 import { NftCollectionEntity } from '../model'
 import { ContractMetadata, TokenMetadata, UrisBySource, ipfsUri } from './interfaces'
+import { splitIntoBatches } from './helpers'
 
 
 const api = Axios.create({
@@ -136,7 +137,9 @@ export async function fetchIpfsMetadata(ctx: Context, ipfsUris: ipfsUri[]): Prom
 }
 
 export async function fillNftCollectionsMetadata(ctx: Context, collections: NftCollectionEntity[]){
-    const filledMetadata = await fetchAllMetadata(ctx, collections.map(obj => obj.uri).filter((uri): uri is string => uri !== null));
+    const collectionsWithUri = collections.map(obj => obj.uri).filter((uri): uri is string => uri != null)
+    ctx.log.info(`Fetching collection metadata from contract uri for ${collectionsWithUri.length} collections`)
+    const filledMetadata = await fetchAllMetadata(ctx, collectionsWithUri);
     for(const collection of collections){
         if (collection.uri){
             Object.assign(collection, await mapCollectionMetadata(filledMetadata.get(collection.uri)))
@@ -144,39 +147,44 @@ export async function fillNftCollectionsMetadata(ctx: Context, collections: NftC
     }
 }
 
-export async function fillNftsMetadata(ctx: Context, nfts: NftEntity[]){
-    const filledMetadata = await fetchAllMetadata(ctx, nfts.map(obj => obj.uri).filter((uri): uri is string => uri !== null));
-    for(const nft of nfts){
-        if (nft.uri){
-            Object.assign(nft, await mapTokenMetadata(filledMetadata.get(nft.uri)))
+export async function fillNftsMetadata(ctx: Context, nfts: NftEntity[], batchSize=100, sleep=3000){
+    for (const batch of splitIntoBatches(nfts, batchSize)){
+        const tokensWithUri = batch.map(obj => obj.uri).filter((uri): uri is string => uri != null)
+        ctx.log.info(`Fetching token metadata for ${tokensWithUri.length} NFTs`)
+        const filledMetadata = await fetchAllMetadata(ctx, tokensWithUri);
+        for(const nft of batch){
+            if (nft.uri){
+                Object.assign(nft, await mapTokenMetadata(filledMetadata.get(nft.uri)))
+            }
         }
+        await new Promise(f => setTimeout(f, sleep));
     }
 }
 
 
 export async function mapCollectionMetadata(rawMetadata: any): Promise<ContractMetadata> {
     return {
-        name: typeof rawMetadata.name === 'string' ? rawMetadata.name : undefined,
-        description: typeof rawMetadata.description === 'string' ? rawMetadata.description : undefined,
-        image: typeof rawMetadata.image === 'string' ? rawMetadata.image 
-                : typeof rawMetadata.thumbnailUri === 'string' ? rawMetadata.thumbnailUri 
-                : typeof rawMetadata.mediaUri === 'string' ? rawMetadata.mediaUri 
+        name: typeof rawMetadata?.name === 'string' ? rawMetadata.name : undefined,
+        description: typeof rawMetadata?.description === 'string' ? rawMetadata.description : undefined,
+        image: typeof rawMetadata?.image === 'string' ? rawMetadata.image 
+                : typeof rawMetadata?.thumbnailUri === 'string' ? rawMetadata.thumbnailUri 
+                : typeof rawMetadata?.mediaUri === 'string' ? rawMetadata.mediaUri 
                 : undefined,
-        externalLink: typeof rawMetadata.external_link === 'string' ? rawMetadata.external_link : undefined
+        externalLink: typeof rawMetadata?.external_link === 'string' ? rawMetadata.external_link : undefined
     }
 }
 
 export async function mapTokenMetadata(rawMetadata: any): Promise<TokenMetadata> {
     return {
-        name: typeof rawMetadata.name === 'string' ? rawMetadata.name : undefined,
-        description: typeof rawMetadata.description === 'string' ? rawMetadata.description : undefined,
-        image: typeof rawMetadata.image === 'string' ? rawMetadata.image 
-            : typeof rawMetadata.thumbnailUri === 'string' ? rawMetadata.thumbnailUri 
-            : typeof rawMetadata.mediaUri === 'string' ? rawMetadata.mediaUri 
+        name: typeof rawMetadata?.name === 'string' ? rawMetadata.name : undefined,
+        description: typeof rawMetadata?.description === 'string' ? rawMetadata.description : undefined,
+        image: typeof rawMetadata?.image === 'string' ? rawMetadata.image 
+            : typeof rawMetadata?.thumbnailUri === 'string' ? rawMetadata.thumbnailUri 
+            : typeof rawMetadata?.mediaUri === 'string' ? rawMetadata.mediaUri 
             : undefined,
-        externalUrl: typeof rawMetadata.external_url === 'string' ? rawMetadata.external_url : undefined,
-        animationUrl: typeof rawMetadata.animation_url === 'string' ? rawMetadata.animation_url : undefined,
-        attributes: typeof rawMetadata.attributes === 'object' && rawMetadata.attributes !== null ? rawMetadata.attributes : undefined
+        externalUrl: typeof rawMetadata?.external_url === 'string' ? rawMetadata.external_url : undefined,
+        animationUrl: typeof rawMetadata?.animation_url === 'string' ? rawMetadata.animation_url : undefined,
+        attributes: typeof rawMetadata?.attributes === 'object' && rawMetadata.attributes !== null ? rawMetadata.attributes : undefined
     }
 }
 

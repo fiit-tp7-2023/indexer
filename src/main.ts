@@ -10,6 +10,7 @@ import {fillNftsMetadata, fillNftCollectionsMetadata}from './utils/metadata'
 import { CONTRACTS_TO_INDEX, MULTICALL_CONTRACTS_BY_BLOCKCHAIN } from './utils/constants';
 import { TransferEvent, Cache } from './utils/interfaces';
 import { Multicall } from './abi/multicall';
+import { splitIntoBatches } from './utils/helpers';
 
 
 
@@ -88,19 +89,6 @@ export function _clearCache(){
 }
 
 
-export function* splitIntoBatches<T>(list: T[], maxBatchSize: number = 15000): Generator<T[]> {
-    if (list.length <= maxBatchSize) {
-        yield list
-    } else {
-        let offset = 0
-        while (list.length - offset > maxBatchSize) {
-            yield list.slice(offset, offset + maxBatchSize)
-            offset += maxBatchSize
-        }
-        yield list.slice(offset)
-    }
-}
-
 export function getNftEntityId(contractAddress: string, blockchain: string, tokenId: bigint): string {
     return `${contractAddress}_${blockchain}_${tokenId}`
 }
@@ -157,24 +145,25 @@ export async function getOrCreateNfts(ctx: Context, latestBlockNumber: number, c
         )
     }
     await getOrCreateNftCollections(ctx, latestBlockNumber, cache, collectionsData)
-    for (let batch of splitIntoBatches([...nftsData.entries()], 100)){
-        const batchNfts = [];
-        for(const [nftId, nftData] of batch){
-            const collectionId = getCollectionEntityId(nftData.contractAddress, nftData.blockchain)
-            const nftCollenction = cache.NftCollections.get(collectionId)
 
-            let nftEntity = new NftEntity({
-                id: nftId,
-                tokenId: nftData.tokenIds[0],
-                nftCollection: nftCollenction
-           });
-           nftEntity.uri = await getTokenUri(ctx, latestBlockNumber, nftEntity);
-           batchNfts.push(nftEntity);
-           cache.Nfts.set(nftId, nftEntity);
-        }
-        await fillNftsMetadata(ctx, batchNfts);
-        await new Promise(f => setTimeout(f, 3000));
+    const newNfts = []
+    for(const [nftId, nftData] of nftsData){
+        const collectionId = getCollectionEntityId(nftData.contractAddress, nftData.blockchain)
+        const nftCollenction = cache.NftCollections.get(collectionId)
+
+        let nftEntity = new NftEntity({
+            id: nftId,
+            tokenId: nftData.tokenIds[0],
+            nftCollection: nftCollenction
+        });
+        newNfts.push(nftEntity)
+        cache.Nfts.set(nftId, nftEntity);
     }
+    if(newNfts){
+        await fillTokenUri(ctx, latestBlockNumber,  newNfts)
+        await fillNftsMetadata(ctx, newNfts)
+    }
+    
 }
 
 
@@ -182,11 +171,13 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
     for (let batch of splitIntoBatches([...collectionsData.keys()])){
         (await ctx.store.findBy(NftCollectionEntity, { id: In(batch) })).map((entity) => {
             cache.NftCollections.set(entity.id, entity)
-            cache.NftCollections.delete(entity.id)
+            collectionsData.delete(entity.id)
         });
     }
 
-    const batchCollections = [];
+
+
+    const newCollections = []
     for(const[collectionId, collectionData] of collectionsData){
        let nftCollenctionEntity = new NftCollectionEntity({
             id: collectionId,
@@ -194,35 +185,47 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
             blockchain: collectionData.blockchain,
             contractType: collectionData.contractType
        });
-       
-       batchCollections.push(nftCollenctionEntity)
        cache.NftCollections.set(collectionId, nftCollenctionEntity);
+       newCollections.push(nftCollenctionEntity)
     }
-    await fillContractUris(ctx, latestBlockNumber, batchCollections);
-    // Get Collection metadata only for collections which does not contains ContractURI
-    await fillCollectionData(ctx, latestBlockNumber, batchCollections.filter(collection => collection.uri == null))
-    await fillNftCollectionsMetadata(ctx, batchCollections);
+    if(newCollections){
+        await fillCollectionUris(ctx, latestBlockNumber, newCollections);
+        // Get Collection metadata only for collections which does not contains ContractURI
+        await fillCollectionData(ctx, latestBlockNumber, newCollections.filter(collection => collection.uri == null))
+        await fillNftCollectionsMetadata(ctx, newCollections);
+    }    
 }
 
-export async function getTokenUri(ctx: Context, latestBlockNumber: number, token: NftEntity): Promise<string|undefined>{
-    let tokenUri = token.nftCollection.baseUri 
-      ? token.nftCollection.baseUri.replace('{id}', token.tokenId.toString()) 
-      : null;
-  
-    if (!tokenUri) {
-      try {
-        const contract = new erc721.Contract(ctx, { height: latestBlockNumber }, token.nftCollection.address);
-        tokenUri = await contract.tokenURI(token.tokenId);
-        if (tokenUri.includes('{id}')) {
-          token.nftCollection.baseUri = tokenUri;
-          tokenUri = tokenUri.replace('{id}', token.tokenId.toString());
+export async function fillTokenUri(ctx: Context, latestBlockNumber: number, tokens: NftEntity[]): Promise<undefined>{
+    const tokensToFetchUri: NftEntity[] = []
+    for(const token of tokens){
+        if(token.nftCollection.baseUri){
+            token.uri = token.nftCollection.baseUri.replace('{id}', token.tokenId.toString()) 
+        } else {
+            tokensToFetchUri.push(token)
         }
-      } catch (e) {
-        ctx.log.warn(`Failed to get tokenURI for token ${token.id} ${(e as Error).message}`);
-        return;
-      }
     }
-    return tokenUri
+    const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(BLOCKCHAIN)
+    if(!multicall){
+        ctx.log.error(`Multicall contract for ${BLOCKCHAIN} not defined`)
+        return
+    }
+    const calls = tokensToFetchUri.map(token => ([
+        token.nftCollection.address, [token.tokenId]
+    ] as [string, any[]]))
+    const multicallContract = new Multicall(ctx, {height: latestBlockNumber}, multicall.address)
+    const results = await multicallContract.tryAggregate(
+        erc721.functions.tokenURI,
+        calls,
+        multicall.batchSize
+    )
+    results.forEach((res, i) => {
+        if(res.success){
+            tokensToFetchUri[i].uri = res.value
+        } else{
+            tokensToFetchUri[i].uri = null
+        }
+    })
 }
 
 export async function fillCollectionData(ctx: Context, latestBlockNumber: number, collections: NftCollectionEntity[]): Promise<undefined>{
@@ -254,7 +257,7 @@ export async function fillCollectionData(ctx: Context, latestBlockNumber: number
     }
 }
 
-export async function fillContractUris(ctx: Context, latestBlockNumber: number, collections: NftCollectionEntity[]): Promise<undefined>{
+export async function fillCollectionUris(ctx: Context, latestBlockNumber: number, collections: NftCollectionEntity[]): Promise<undefined>{
     const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(BLOCKCHAIN)
     if(!multicall){
         ctx.log.error(`Multicall contract for ${BLOCKCHAIN} not defined`)
@@ -264,19 +267,33 @@ export async function fillContractUris(ctx: Context, latestBlockNumber: number, 
         collection.address, []
     ] as [string, any[]]))
     const multicallContract = new Multicall(ctx, {height: latestBlockNumber}, multicall.address)
-    const results = await multicallContract.tryAggregate(
+
+    const contractUriResults = await multicallContract.tryAggregate(
         erc721.functions.contractURI,
         calls,
         multicall.batchSize
     )
-    results.forEach((res, i) => {
-        if(res.success){
-            collections[i].uri = res.value
-        } else{
-            collections[i].uri = null
+    const baseUriResults = await multicallContract.tryAggregate(
+        erc721.functions.baseURI,
+        calls,
+        multicall.batchSize
+    )
+
+    for(let i=0; i<contractUriResults.length; i++){
+        if(contractUriResults[i].success)
+            collections[i].uri = contractUriResults[i].value
+        if(baseUriResults[i].success){
+            let baseUri = baseUriResults[i].value
+            if(baseUri){
+                baseUri = baseUri.trim()
+                if(!baseUri.includes('{id}')){
+                    baseUri = baseUri + '{id}'
+                }
+            }
+            collections[i].baseUri = baseUri
         }
-    }) 
-    
+    }
+        
 }
 
 
