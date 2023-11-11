@@ -198,7 +198,9 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
        batchCollections.push(nftCollenctionEntity)
        cache.NftCollections.set(collectionId, nftCollenctionEntity);
     }
-    await fillContractUris(ctx, latestBlockNumber, batchCollections)
+    await fillContractUris(ctx, latestBlockNumber, batchCollections);
+    // Get Collection metadata only for collections which does not contains ContractURI
+    await fillCollectionData(ctx, latestBlockNumber, batchCollections.filter(collection => collection.uri == null))
     await fillNftCollectionsMetadata(ctx, batchCollections);
 }
 
@@ -223,22 +225,40 @@ export async function getTokenUri(ctx: Context, latestBlockNumber: number, token
     return tokenUri
 }
 
-export async function getCollectionData(ctx: Context, latestBlockNumber: number, collection: NftCollectionEntity): Promise<{name: string|null, symbol: string|null}>{
-    const contract = new erc721.Contract(ctx, {height: latestBlockNumber}, collection.address);
-    try{
-        const [name, symbol] = await Promise.all([contract.name(), contract.symbol()])
-        return {name: name, symbol: symbol}
-    } catch (e){
-        ctx.log.warn(`ContractMetadata (name, symbol) ERROR ${collection.address}  ${(e as Error).message}`)
-        return {name: null, symbol: null}
-    }
-}
-
-export async function fillContractUris(ctx: Context, latestBlockNumber: number, collections: NftCollectionEntity[]) {
+export async function fillCollectionData(ctx: Context, latestBlockNumber: number, collections: NftCollectionEntity[]): Promise<undefined>{
     const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(BLOCKCHAIN)
     if(!multicall){
         ctx.log.error(`Multicall contract for ${BLOCKCHAIN} not defined`)
-        return null
+        return
+    }
+    const calls = collections.map(collection => ([
+        collection.address, []
+    ] as [string, any[]]))
+
+    const multicallContract = new Multicall(ctx, {height: latestBlockNumber}, multicall.address)
+    const nameResults = await multicallContract.tryAggregate(
+        erc721.functions.name,
+        calls,
+        multicall.batchSize
+    )
+    const symbolResults = await multicallContract.tryAggregate(
+        erc721.functions.symbol,
+        calls,
+        multicall.batchSize
+    )
+    for(let i=0; i<nameResults.length; i++){
+        if(nameResults[i].success)
+            collections[i].name = nameResults[i].value
+        if(symbolResults[i].success)
+            collections[i].symbol = symbolResults[i].value
+    }
+}
+
+export async function fillContractUris(ctx: Context, latestBlockNumber: number, collections: NftCollectionEntity[]): Promise<undefined>{
+    const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(BLOCKCHAIN)
+    if(!multicall){
+        ctx.log.error(`Multicall contract for ${BLOCKCHAIN} not defined`)
+        return
     }
     const calls = collections.map(collection => ([
         collection.address, []
