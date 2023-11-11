@@ -6,8 +6,7 @@ import * as erc20 from './abi/erc20'
 import * as erc1155 from './abi/erc1155'
 import {ContractType, NftCollectionEntity, NftEntity, NftTransferEntity, Blockchain, TokenCollectionEntity, TokenTransferEntity} from './model'
 import {Block, CONTRACT_ADDRESSES, BLOCKCHAIN, Context, Log, Transaction, processor} from './processor'
-import {parseContractMetadata, ContractMetadata, parseTokenMetadata}from './utils/metadata'
-
+import {ContractMetadata, fillNftsMetadata, fillNftCollectionsMetadata}from './utils/metadata'
 
 
 interface TransferEvent {
@@ -161,20 +160,23 @@ export async function getOrCreateNfts(ctx: Context, latestBlockNumber: number, c
         )
     }
     await getOrCreateNftCollections(ctx, latestBlockNumber, cache, collectionsData)
-    for (let batch of splitIntoBatches([...nftsData.entries()], 25)){
-        Promise.all(batch.map(async ([nftId, nftData]) => {
+    for (let batch of splitIntoBatches([...nftsData.entries()], 100)){
+        const batchNfts = [];
+        for(const [nftId, nftData] of batch){
             const collectionId = getCollectionEntityId(nftData.contractAddress, nftData.blockchain)
             const nftCollenction = cache.NftCollections.get(collectionId)
-            let nftEntity = new NftEntity({
-                 id: nftId,
-                 tokenId: nftData.tokenIds[0],
-                 nftCollection: nftCollenction
-            });
-            fillTokenMetadata(ctx, latestBlockNumber, nftEntity);
-            cache.Nfts.set(nftId, nftEntity);
-        }))
-        await new Promise(f => setTimeout(f, 10000));
 
+            let nftEntity = new NftEntity({
+                id: nftId,
+                tokenId: nftData.tokenIds[0],
+                nftCollection: nftCollenction
+           });
+           nftEntity.uri = await getTokenUri(ctx, latestBlockNumber, nftEntity);
+           batchNfts.push(nftEntity);
+           cache.Nfts.set(nftId, nftEntity);
+        }
+        await fillNftsMetadata(ctx, batchNfts);
+        await new Promise(f => setTimeout(f, 3000));
     }
 }
 
@@ -187,6 +189,7 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
         });
     }
 
+    const batchCollections = [];
     for(const[collectionId, collectionData] of collectionsData){
        let nftCollenctionEntity = new NftCollectionEntity({
             id: collectionId,
@@ -194,12 +197,17 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
             blockchain: collectionData.blockchain,
             contractType: collectionData.contractType
        });
-       await fillCollectionMetadata(ctx, latestBlockNumber, nftCollenctionEntity)
+       nftCollenctionEntity.uri = await getContractUri(ctx, latestBlockNumber, nftCollenctionEntity)
+       if(!nftCollenctionEntity.uri){
+            Object.assign(nftCollenctionEntity, await getCollectionData(ctx, latestBlockNumber, nftCollenctionEntity))
+       }
+       batchCollections.push(nftCollenctionEntity)
        cache.NftCollections.set(collectionId, nftCollenctionEntity);
+       await fillNftCollectionsMetadata(ctx, batchCollections);
     }
 }
 
-export async function fillTokenMetadata(ctx: Context, latestBlockNumber: number, token: NftEntity) {
+export async function getTokenUri(ctx: Context, latestBlockNumber: number, token: NftEntity): Promise<string|undefined>{
     let tokenUri = token.nftCollection.baseUri 
       ? token.nftCollection.baseUri.replace('{id}', token.tokenId.toString()) 
       : null;
@@ -217,39 +225,27 @@ export async function fillTokenMetadata(ctx: Context, latestBlockNumber: number,
         return;
       }
     }
-  
-    token.uri = tokenUri;
-    const tokenMetadata = await parseTokenMetadata(ctx, tokenUri);
-  
-    if (tokenMetadata) {
-      const { name, attributes, description, external_url, image, animation_url } = tokenMetadata;
-      Object.assign(token, { name, attributes, description, externalUrl: external_url, image, animationUrl: animation_url });
-    }
-  }
+    return tokenUri
+}
 
-export async function fillCollectionMetadata(ctx: Context, latestBlockNumber: number, collection: NftCollectionEntity){
+export async function getCollectionData(ctx: Context, latestBlockNumber: number, collection: NftCollectionEntity): Promise<{name: string|null, symbol: string|null}>{
     const contract = new erc721.Contract(ctx, {height: latestBlockNumber}, collection.address);
-    let contractUri = null
     try{
-        contractUri = await contract.contractURI();
-    } catch{}
-    if (contractUri !== null){
-        collection.uri = contractUri
-        Object.assign(collection, await parseContractMetadata(ctx, contractUri))
-    } else {
-        try{
-            [collection.name, collection.symbol] = await Promise.all([contract.name(), contract.symbol()])
-        } catch (e){
-            ctx.log.warn(`ContractMetadata (name, symbol) ERROR ${contractUri}  ${(e as Error).message}`)
-        }
+        const [name, symbol] = await Promise.all([contract.name(), contract.symbol()])
+        return {name: name, symbol: symbol}
+    } catch (e){
+        ctx.log.warn(`ContractMetadata (name, symbol) ERROR ${collection.address}  ${(e as Error).message}`)
+        return {name: null, symbol: null}
     }
+}
+
+export async function getContractUri(ctx: Context, latestBlockNumber: number, collection: NftCollectionEntity): Promise<string|null>{
+    const contract = new erc721.Contract(ctx, {height: latestBlockNumber}, collection.address);
     try{
-        collection.baseUri = await contract.baseURI()
-        collection.baseUri = collection.baseUri.trim()
-        if(!collection.baseUri.includes('{id}')){
-            collection.baseUri = collection.baseUri + '{id}'
-        }
-    } catch {}
+        return await contract.contractURI();
+    } catch{
+        return null
+    }
 }
 
 
