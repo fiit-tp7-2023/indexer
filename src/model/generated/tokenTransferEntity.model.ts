@@ -26,4 +26,8 @@ export class TokenTransferEntity {
     @Index_()
     @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})
     amount!: bigint
+
+    @Index_()
+    @Column_("int4", {nullable: false})
+    createdAtBlock!: number
 }

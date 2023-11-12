@@ -44,6 +44,10 @@ export class NftEntity {
     @ManyToOne_(() => NftCollectionEntity, {nullable: true})
     nftCollection!: NftCollectionEntity
 
+    @Index_()
+    @Column_("int4", {nullable: false})
+    createdAtBlock!: number
+
     @OneToMany_(() => NftTransferEntity, e => e.nft)
     transfers!: NftTransferEntity[]
 }

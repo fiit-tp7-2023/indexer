@@ -45,6 +45,10 @@ export class TokenCollectionEntity {
     @Column_("jsonb", {nullable: true})
     raw!: unknown | undefined | null
 
+    @Index_()
+    @Column_("int4", {nullable: false})
+    createdAtBlock!: number
+
     @OneToMany_(() => TokenTransferEntity, e => e.token)
     transfers!: TokenTransferEntity[]
 }

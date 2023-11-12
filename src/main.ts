@@ -119,7 +119,8 @@ async function processTransfersERC721(ctx: Context, latestBlockNumber: number, c
                 fromAddress: transferData.from,
                 toAddress: transferData.to,
                 nft: nft,
-                amount: BigInt(1)
+                amount: BigInt(1),
+                createdAtBlock: transferData.block.height
             }))
         } else {
             ctx.log.error(`NFT with id ${nftId} not found`)
@@ -139,8 +140,10 @@ export async function getOrCreateNfts(ctx: Context, latestBlockNumber: number, c
 
     const collectionsData: Map<string, TransferEvent> = new Map()
     for(const nftData of nftsData.values()){
+        const collectionId = getCollectionEntityId(nftData.contractAddress, nftData.blockchain)
+        if(!collectionsData.has(collectionId))
         collectionsData.set(
-            getCollectionEntityId(nftData.contractAddress, nftData.blockchain),
+            collectionId,
             nftData
         )
     }
@@ -154,7 +157,8 @@ export async function getOrCreateNfts(ctx: Context, latestBlockNumber: number, c
         let nftEntity = new NftEntity({
             id: nftId,
             tokenId: nftData.tokenIds[0],
-            nftCollection: nftCollenction
+            nftCollection: nftCollenction,
+            createdAtBlock: nftData.block.height
         });
         newNfts.push(nftEntity)
         cache.Nfts.set(nftId, nftEntity);
@@ -183,7 +187,8 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
             id: collectionId,
             address: collectionData.contractAddress,
             blockchain: collectionData.blockchain,
-            contractType: collectionData.contractType
+            contractType: collectionData.contractType,
+            createdAtBlock: collectionData.block.height
        });
        cache.NftCollections.set(collectionId, nftCollenctionEntity);
        newCollections.push(nftCollenctionEntity)

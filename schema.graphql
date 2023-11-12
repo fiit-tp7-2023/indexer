@@ -24,6 +24,7 @@ type NftCollectionEntity @entity {
   uri: String
   raw: JSON
   baseUri: String
+  createdAtBlock: Int! @index
   nfts: [NftEntity] @derivedFrom(field: "nftCollection")
 }
 
@@ -39,6 +40,7 @@ type TokenCollectionEntity @entity {
   logo: String
   thumbnail: String
   raw: JSON
+  createdAtBlock: Int! @index
   transfers: [TokenTransferEntity] @derivedFrom(field: "token")
 }
 
@@ -54,6 +56,7 @@ type NftEntity @entity {
   uri: String
   raw: JSON
   nftCollection: NftCollectionEntity!
+  createdAtBlock: Int! @index
   transfers: [NftTransferEntity] @derivedFrom(field: "nft")
 }
 
@@ -63,6 +66,7 @@ type NftTransferEntity @entity {
   fromAddress: String! @index
   toAddress: String! @index
   amount: BigInt! @index
+  createdAtBlock: Int! @index
 }
 
 type TokenTransferEntity @entity {
@@ -71,4 +75,5 @@ type TokenTransferEntity @entity {
   fromAddress: String! @index
   toAddress: String! @index
   amount: BigInt! @index
+  createdAtBlock: Int! @index
 }
