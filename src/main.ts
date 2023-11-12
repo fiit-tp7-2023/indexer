@@ -23,7 +23,7 @@ const cache: Cache = {
 }
 
 processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
-    let TransfersERC721: TransferEvent[] = []
+    const TransfersNfts: TransferEvent[] = []
     _clearCache();
    
     const latestBlockNumber =  parseInt(await ctx._chain.client.call('eth_blockNumber'))
@@ -35,13 +35,13 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                 log.topics.length === 4
             ) {
                 const {from, to, tokenId} = erc721.events.Transfer.decode(log);
-                TransfersERC721.push({
+                TransfersNfts.push({
                     id: uuidv4(),
                     block: log.block,
                     from: from,
                     to: to,
-                    tokenIds: [tokenId],
-                    amounts: [BigInt(1)],
+                    tokenId: tokenId,
+                    amount: BigInt(1),
                     contractAddress: log.address,
                     blockchain: BLOCKCHAIN,
                     contractType: ContractType.erc721
@@ -58,19 +58,43 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                 CONTRACTS_TO_INDEX.some(contract => contract.address == log.address) &&
                  log.topics[0] === erc1155.events.TransferSingle.topic
             ) {
-                // TODO Handle ERC1155 TransferSingle event
+                const {from, to, id, value} = erc1155.events.TransferSingle.decode(log);
+                TransfersNfts.push({
+                    id: uuidv4(),
+                    block: log.block,
+                    from: from,
+                    to: to,
+                    tokenId: id,
+                    amount: value,
+                    contractAddress: log.address,
+                    blockchain: BLOCKCHAIN,
+                    contractType: ContractType.erc1155
+                })
             }
             else if(
                 CONTRACTS_TO_INDEX.some(contract => contract.address == log.address) &&
                  log.topics[0] === erc1155.events.TransferBatch.topic
             ) {
-                // TODO handle ERC1155 TransferBatch event
+                const {from, to, ids, amounts} = erc1155.events.TransferBatch.decode(log);
+                for(let i=0; i<ids.length; i++){
+                    TransfersNfts.push({
+                        id: uuidv4(),
+                        block: log.block,
+                        from: from,
+                        to: to,
+                        tokenId: ids[i],
+                        amount: amounts[i],
+                        contractAddress: log.address,
+                        blockchain: BLOCKCHAIN,
+                        contractType: ContractType.erc1155
+                    })
+                }
             }
         }
     }
 
     
-    await processTransfersERC721(ctx, latestBlockNumber, cache, TransfersERC721)
+    await processTransfersERC721(ctx, latestBlockNumber, cache, TransfersNfts)
 
 
     await ctx.store.upsert([...cache.NftCollections.values()])
@@ -105,13 +129,13 @@ async function processTransfersERC721(ctx: Context, latestBlockNumber: number, c
     let nftsData: Map<string, TransferEvent> = new Map()
     transfersData.forEach(transferData => {
         nftsData.set(
-            getNftEntityId(transferData.contractAddress, Blockchain.eth, transferData.tokenIds[0]),
+            getNftEntityId(transferData.contractAddress, Blockchain.eth, transferData.tokenId),
             transferData
         )
     });
     await getOrCreateNfts(ctx, latestBlockNumber, cache, nftsData);
     transfersData.forEach(transferData => {
-        const nftId = getNftEntityId(transferData.contractAddress, Blockchain.eth, transferData.tokenIds[0])
+        const nftId = getNftEntityId(transferData.contractAddress, Blockchain.eth, transferData.tokenId)
         const nft = cache.Nfts.get(nftId)
         if(nft !== undefined){
             cache.NftTransfers.push(new NftTransferEntity({
@@ -156,7 +180,7 @@ export async function getOrCreateNfts(ctx: Context, latestBlockNumber: number, c
 
         let nftEntity = new NftEntity({
             id: nftId,
-            tokenId: nftData.tokenIds[0],
+            tokenId: nftData.tokenId,
             nftCollection: nftCollenction,
             createdAtBlock: nftData.block.height
         });
@@ -200,7 +224,7 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
         await fillNftCollectionsMetadata(ctx, newCollections);
     }    
 }
-
+ 
 export async function fillTokenUri(ctx: Context, latestBlockNumber: number, tokens: NftEntity[]): Promise<undefined>{
     const tokensToFetchUri: NftEntity[] = []
     for(const token of tokens){
@@ -215,10 +239,10 @@ export async function fillTokenUri(ctx: Context, latestBlockNumber: number, toke
         ctx.log.error(`Multicall contract for ${BLOCKCHAIN} not defined`)
         return
     }
-    const calls = tokensToFetchUri.map(token => ([
+const calls = tokensToFetchUri.map(token => ([
         token.nftCollection.address, [token.tokenId]
     ] as [string, any[]]))
-    const multicallContract = new Multicall(ctx, {height: latestBlockNumber}, multicall.address)
+        const multicallContract = new Multicall(ctx, {height: latestBlockNumber}, multicall.address)
     const results = await multicallContract.tryAggregate(
         erc721.functions.tokenURI,
         calls,
@@ -229,9 +253,9 @@ export async function fillTokenUri(ctx: Context, latestBlockNumber: number, toke
             tokensToFetchUri[i].uri = res.value
         } else{
             tokensToFetchUri[i].uri = null
-        }
-    })
-}
+            }
+        })
+    }
 
 export async function fillCollectionData(ctx: Context, latestBlockNumber: number, collections: NftCollectionEntity[]): Promise<undefined>{
     const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(BLOCKCHAIN)
@@ -287,7 +311,7 @@ export async function fillCollectionUris(ctx: Context, latestBlockNumber: number
     for(let i=0; i<contractUriResults.length; i++){
         if(contractUriResults[i].success)
             collections[i].uri = contractUriResults[i].value
-        if(baseUriResults[i].success){
+                    if(baseUriResults[i].success){
             let baseUri = baseUriResults[i].value
             if(baseUri){
                 baseUri = baseUri.trim()
