@@ -16,6 +16,12 @@ export const CONTRACTS_TO_INDEX: IndexContract[] = [
         blockchain: Blockchain.eth,
         name:'PXQuest'
     },
+    {
+        address: '0x76BE3b62873462d2142405439777e971754E8E77'.toLowerCase(), // 11930426
+        type: ContractType.erc1155,
+        blockchain: Blockchain.eth,
+        name:'Parallel Alpha'
+    },
 
 ]
 

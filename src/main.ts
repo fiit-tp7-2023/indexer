@@ -94,7 +94,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     }
 
     
-    await processTransfersERC721(ctx, latestBlockNumber, cache, TransfersNfts)
+    await processTransfersNfts(ctx, latestBlockNumber, cache, TransfersNfts)
 
 
     await ctx.store.upsert([...cache.NftCollections.values()])
@@ -125,7 +125,7 @@ export function getCollectionEntityIdFromNftId(NftId: string): string {
     return NftId.slice(0, NftId.indexOf('_', 43));
 }
 
-async function processTransfersERC721(ctx: Context, latestBlockNumber: number, cache: Cache, transfersData: TransferEvent[]) {
+async function processTransfersNfts(ctx: Context, latestBlockNumber: number, cache: Cache, transfersData: TransferEvent[]) {
     let nftsData: Map<string, TransferEvent> = new Map()
     transfersData.forEach(transferData => {
         nftsData.set(
@@ -143,7 +143,7 @@ async function processTransfersERC721(ctx: Context, latestBlockNumber: number, c
                 fromAddress: transferData.from,
                 toAddress: transferData.to,
                 nft: nft,
-                amount: BigInt(1),
+                amount: transferData.amount,
                 createdAtBlock: transferData.block.height
             }))
         } else {
