@@ -14,8 +14,8 @@ export interface TransferEvent {
     block: Block,
     from: string,
     to: string,
-    tokenIds: bigint[]
-    amounts: bigint[]
+    tokenId: bigint
+    amount: bigint
     contractAddress: string
     blockchain: Blockchain
     contractType: ContractType
