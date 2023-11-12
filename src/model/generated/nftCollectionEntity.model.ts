@@ -50,6 +50,10 @@ export class NftCollectionEntity {
     @Column_("text", {nullable: true})
     baseUri!: string | undefined | null
 
+    @Index_()
+    @Column_("int4", {nullable: false})
+    createdAtBlock!: number
+
     @OneToMany_(() => NftEntity, e => e.nftCollection)
     nfts!: NftEntity[]
 }
