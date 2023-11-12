@@ -94,7 +94,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     }
 
     
-    await processTransfersERC721(ctx, latestBlockNumber, cache, TransfersNfts)
+    await processTransfersNfts(ctx, latestBlockNumber, cache, TransfersNfts)
 
 
     await ctx.store.upsert([...cache.NftCollections.values()])
@@ -125,7 +125,7 @@ export function getCollectionEntityIdFromNftId(NftId: string): string {
     return NftId.slice(0, NftId.indexOf('_', 43));
 }
 
-async function processTransfersERC721(ctx: Context, latestBlockNumber: number, cache: Cache, transfersData: TransferEvent[]) {
+async function processTransfersNfts(ctx: Context, latestBlockNumber: number, cache: Cache, transfersData: TransferEvent[]) {
     let nftsData: Map<string, TransferEvent> = new Map()
     transfersData.forEach(transferData => {
         nftsData.set(
@@ -143,7 +143,7 @@ async function processTransfersERC721(ctx: Context, latestBlockNumber: number, c
                 fromAddress: transferData.from,
                 toAddress: transferData.to,
                 nft: nft,
-                amount: BigInt(1),
+                amount: transferData.amount,
                 createdAtBlock: transferData.block.height
             }))
         } else {
@@ -188,7 +188,7 @@ export async function getOrCreateNfts(ctx: Context, latestBlockNumber: number, c
         cache.Nfts.set(nftId, nftEntity);
     }
     if(newNfts){
-        await fillTokenUri(ctx, latestBlockNumber,  newNfts)
+        await fillTokensUri(ctx, latestBlockNumber, newNfts)
         await fillNftsMetadata(ctx, newNfts)
     }
     
@@ -225,37 +225,41 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
     }    
 }
  
-export async function fillTokenUri(ctx: Context, latestBlockNumber: number, tokens: NftEntity[]): Promise<undefined>{
-    const tokensToFetchUri: NftEntity[] = []
-    for(const token of tokens){
-        if(token.nftCollection.baseUri){
-            token.uri = token.nftCollection.baseUri.replace('{id}', token.tokenId.toString()) 
-        } else {
-            tokensToFetchUri.push(token)
+export async function fillTokensUri(ctx: Context, latestBlockNumber: number, tokens: NftEntity[]): Promise<void> {
+    const tokensToFetchUri: NftEntity[] = tokens.filter(token => !token.nftCollection.baseUri);
+    tokens.forEach(token => {
+        if (token.nftCollection.baseUri) {
+            token.uri = token.nftCollection.baseUri.replace('{id}', token.tokenId.toString());
         }
-    }
-    const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(BLOCKCHAIN)
-    if(!multicall){
-        ctx.log.error(`Multicall contract for ${BLOCKCHAIN} not defined`)
+    });
+
+    const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(BLOCKCHAIN);
+    if (!multicall) {
+        ctx.log.error(`Multicall contract for ${BLOCKCHAIN} not defined`);
         return
     }
-const calls = tokensToFetchUri.map(token => ([
-        token.nftCollection.address, [token.tokenId]
-    ] as [string, any[]]))
-        const multicallContract = new Multicall(ctx, {height: latestBlockNumber}, multicall.address)
-    const results = await multicallContract.tryAggregate(
-        erc721.functions.tokenURI,
-        calls,
-        multicall.batchSize
-    )
-    results.forEach((res, i) => {
-        if(res.success){
-            tokensToFetchUri[i].uri = res.value
+
+    for(const contractType of [ContractType.erc721, ContractType.erc1155]){
+        const nfts = tokensToFetchUri.filter(token => token.nftCollection.contractType == contractType);
+        if(!nfts.length)
+            continue
+        const calls = nfts.map(token => ([token.nftCollection.address, [token.tokenId]] as [string, any[]]));
+        const multicallContract = new Multicall(ctx, { height: latestBlockNumber }, multicall.address);
+        let results
+        if(contractType == ContractType.erc721){
+            results = await multicallContract.tryAggregate(erc721.functions.tokenURI, calls, multicall.batchSize);
         } else{
-            tokensToFetchUri[i].uri = null
+            results = await multicallContract.tryAggregate(erc1155.functions.uri, calls, multicall.batchSize);
+        }
+        results.forEach((res, i) => {
+            if(res.success){
+                nfts[i].uri = res.value
+            } else{
+                nfts[i].uri = null
             }
         })
     }
+}
 
 export async function fillCollectionData(ctx: Context, latestBlockNumber: number, collections: NftCollectionEntity[]): Promise<undefined>{
     const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(BLOCKCHAIN)
