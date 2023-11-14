@@ -24,6 +24,7 @@ const cache: Cache = {
 
 processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
     const TransfersNfts: TransferEvent[] = []
+    const TransfersTokens: TransferEvent[] = []
     _clearCache();
    
     const latestBlockNumber =  parseInt(await ctx._chain.client.call('eth_blockNumber'))
@@ -52,7 +53,18 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
                 log.topics[0] === erc20.events.Transfer.topic &&
                 log.topics.length === 3
             ) {
-                // TODO Handle ERC20 Transfer event
+                const {from, to, value} = erc20.events.Transfer.decode(log);
+                TransfersTokens.push({
+                    id: uuidv4(),
+                    block: log.block,
+                    from: from,
+                    to: to,
+                    tokenId: BigInt(0),
+                    amount: value,
+                    contractAddress: log.address,
+                    blockchain: BLOCKCHAIN,
+                    contractType: ContractType.erc20
+                })
             }
             else if(
                 CONTRACTS_TO_INDEX.some(contract => contract.address == log.address) &&
@@ -95,6 +107,7 @@ processor.run(new TypeormDatabase({supportHotBlocks: true}), async (ctx) => {
 
     
     await processTransfersNfts(ctx, latestBlockNumber, cache, TransfersNfts)
+    await processTransfersTokens(ctx, latestBlockNumber, cache, TransfersTokens)
 
 
     await ctx.store.upsert([...cache.NftCollections.values()])
@@ -148,6 +161,33 @@ async function processTransfersNfts(ctx: Context, latestBlockNumber: number, cac
             }))
         } else {
             ctx.log.error(`NFT with id ${nftId} not found`)
+        }
+        
+    })
+}
+
+async function processTransfersTokens(ctx: Context, latestBlockNumber: number, cache: Cache, transfersData: TransferEvent[]) {
+    let tokensData: Map<string, TransferEvent> = new Map()
+    transfersData.forEach(transferData => {
+        tokensData.set(
+            getCollectionEntityId(transferData.contractAddress, Blockchain.eth),
+            transferData
+        )
+    });
+    // await getOrCreateTokenCollections(ctx, latestBlockNumber, cache, tokensData);
+    tokensData.forEach(transferData => {
+        const collectionId = getCollectionEntityId(transferData.contractAddress, Blockchain.eth)
+        const collections = cache.TokenCollections.get(collectionId)
+        if(collections !== undefined){
+            cache.TokenTransfers.push(new TokenTransferEntity({
+                id: transferData.id,
+                fromAddress: transferData.from,
+                toAddress: transferData.to,
+                amount: transferData.amount,
+                createdAtBlock: transferData.block.height
+            }))
+        } else {
+            ctx.log.error(`Token Collection with id ${collectionId} not found`)
         }
         
     })
