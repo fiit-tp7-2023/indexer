@@ -174,8 +174,8 @@ async function processTransfersTokens(ctx: Context, latestBlockNumber: number, c
             transferData
         )
     });
-    // await getOrCreateTokenCollections(ctx, latestBlockNumber, cache, tokensData);
-    tokensData.forEach(transferData => {
+    await getOrCreateTokenCollections(ctx, latestBlockNumber, cache, tokensData);
+    transfersData.forEach(transferData => {
         const collectionId = getCollectionEntityId(transferData.contractAddress, Blockchain.eth)
         const collections = cache.TokenCollections.get(collectionId)
         if(collections !== undefined){
@@ -243,8 +243,6 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
         });
     }
 
-
-
     const newCollections = []
     for(const[collectionId, collectionData] of collectionsData){
        let nftCollenctionEntity = new NftCollectionEntity({
@@ -262,6 +260,31 @@ export async function getOrCreateNftCollections(ctx: Context, latestBlockNumber:
         // Get Collection metadata only for collections which does not contains ContractURI
         await fillCollectionData(ctx, latestBlockNumber, newCollections.filter(collection => collection.uri == null))
         await fillNftCollectionsMetadata(ctx, newCollections);
+    }    
+}
+
+export async function getOrCreateTokenCollections(ctx: Context, latestBlockNumber: number, cache: Cache, collectionsData: Map<string, TransferEvent>){
+    for (let batch of splitIntoBatches([...collectionsData.keys()])){
+        (await ctx.store.findBy(TokenCollectionEntity, { id: In(batch) })).map((entity) => {
+            cache.TokenCollections.set(entity.id, entity)
+            collectionsData.delete(entity.id)
+        });
+    }
+
+    const newCollections = []
+    for(const[collectionId, collectionData] of collectionsData){
+       let tokenCollectionEntity = new TokenCollectionEntity({
+            id: collectionId,
+            address: collectionData.contractAddress,
+            blockchain: collectionData.blockchain,
+            contractType: collectionData.contractType,
+            createdAtBlock: collectionData.block.height
+       });
+       cache.TokenCollections.set(collectionId, tokenCollectionEntity);
+       newCollections.push(tokenCollectionEntity)
+    }
+    if(newCollections){
+        await fillTokenData(ctx, latestBlockNumber, newCollections)
     }    
 }
  
@@ -363,7 +386,7 @@ export async function fillTokenData(ctx: Context, latestBlockNumber: number, col
         if(symbolResults[i].success)
             collections[i].symbol = symbolResults[i].value
         if(decimalsResults[i].success)
-            collections[i].symbol = symbolResults[i].value
+            collections[i].decimals = decimalsResults[i].value
     }
 }
 
