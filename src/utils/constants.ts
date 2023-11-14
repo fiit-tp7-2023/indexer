@@ -22,6 +22,12 @@ export const CONTRACTS_TO_INDEX: IndexContract[] = [
         blockchain: Blockchain.eth,
         name:'Parallel Alpha'
     },
+    {
+        address: '0xdAC17F958D2ee523a2206206994597C13D831ec7'.toLowerCase(),  //463474
+        type: ContractType.erc20,
+        blockchain: Blockchain.eth,
+        name:'USDT'
+    }
 
 ]
 

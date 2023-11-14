@@ -1,5 +1,5 @@
-module.exports = class Data1699805143425 {
-    name = 'Data1699805143425'
+module.exports = class Data1699949126950 {
+    name = 'Data1699949126950'
 
     async up(db) {
         await db.query(`CREATE TABLE "nft_transfer_entity" ("id" character varying NOT NULL, "from_address" text NOT NULL, "to_address" text NOT NULL, "amount" numeric NOT NULL, "created_at_block" integer NOT NULL, "nft_id" character varying, CONSTRAINT "PK_2d99361c639dbbe97c8be19d2da" PRIMARY KEY ("id"))`)

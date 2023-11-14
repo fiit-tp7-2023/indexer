@@ -36,7 +36,7 @@ type TokenCollectionEntity @entity {
   owner: String
   symbol: String
   name: String
-  decimals: BigInt
+  decimals: Int
   logo: String
   thumbnail: String
   raw: JSON

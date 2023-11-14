@@ -10,6 +10,7 @@ import {
 import {Store} from '@subsquid/typeorm-store'
 import * as erc721 from './abi/erc721'
 import * as erc1155 from './abi/erc1155'
+import * as erc20 from './abi/erc20'
 import { Blockchain, ContractType } from './model'
 import { CONTRACTS_TO_INDEX } from './utils/constants'
 
@@ -35,6 +36,12 @@ export const processor = new EvmBatchProcessor()
             .filter(contract => contract.type === ContractType.erc721)
             .map(contract => contract.address),
         topic0: [erc721.events.Transfer.topic]
+    })
+    .addLog({
+        address: CONTRACTS_TO_INDEX
+            .filter(contract => contract.type === ContractType.erc20)
+            .map(contract => contract.address),
+        topic0: [erc20.events.Transfer.topic]
     })
     .addLog({
         address: CONTRACTS_TO_INDEX

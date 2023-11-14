@@ -1,5 +1,4 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, Index as Index_, OneToMany as OneToMany_} from "typeorm"
-import * as marshal from "./marshal"
 import {Blockchain} from "./_blockchain"
 import {ContractType} from "./_contractType"
 import {TokenTransferEntity} from "./tokenTransferEntity.model"
@@ -33,8 +32,8 @@ export class TokenCollectionEntity {
     @Column_("text", {nullable: true})
     name!: string | undefined | null
 
-    @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: true})
-    decimals!: bigint | undefined | null
+    @Column_("int4", {nullable: true})
+    decimals!: number | undefined | null
 
     @Column_("text", {nullable: true})
     logo!: string | undefined | null
