@@ -19,6 +19,7 @@ import { CONTRACTS_TO_INDEX, MULTICALL_CONTRACTS_BY_BLOCKCHAIN } from './utils/c
 import { TransferEvent, Cache } from './utils/interfaces';
 import { Multicall } from './abi/multicall';
 import { splitIntoBatches } from './utils/helpers';
+import { BlockService } from './services/BlockService';
 
 const cache: Cache = {
   NftCollections: new Map(),
@@ -29,87 +30,14 @@ const cache: Cache = {
 };
 
 processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
-  const TransfersNfts: TransferEvent[] = [];
-  const TransfersTokens: TransferEvent[] = [];
   _clearCache();
 
-  const latestBlockNumber = parseInt(await ctx._chain.client.call('eth_blockNumber'));
-  for (let block of ctx.blocks) {
-    for (let log of block.logs) {
-      if (
-        CONTRACTS_TO_INDEX.some((contract) => contract.address == log.address) &&
-        log.topics[0] === erc721.events.Transfer.topic &&
-        log.topics.length === 4
-      ) {
-        const { from, to, tokenId } = erc721.events.Transfer.decode(log);
-        TransfersNfts.push({
-          id: uuidv4(),
-          block: log.block,
-          from: from,
-          to: to,
-          tokenId: tokenId,
-          amount: BigInt(1),
-          contractAddress: log.address,
-          blockchain: BLOCKCHAIN,
-          contractType: ContractType.erc721,
-        });
-      } else if (
-        CONTRACTS_TO_INDEX.some((contract) => contract.address == log.address) &&
-        log.topics[0] === erc20.events.Transfer.topic &&
-        log.topics.length === 3
-      ) {
-        const { from, to, value } = erc20.events.Transfer.decode(log);
-        TransfersTokens.push({
-          id: uuidv4(),
-          block: log.block,
-          from: from,
-          to: to,
-          tokenId: BigInt(0),
-          amount: value,
-          contractAddress: log.address,
-          blockchain: BLOCKCHAIN,
-          contractType: ContractType.erc20,
-        });
-      } else if (
-        CONTRACTS_TO_INDEX.some((contract) => contract.address == log.address) &&
-        log.topics[0] === erc1155.events.TransferSingle.topic
-      ) {
-        const { from, to, id, value } = erc1155.events.TransferSingle.decode(log);
-        TransfersNfts.push({
-          id: uuidv4(),
-          block: log.block,
-          from: from,
-          to: to,
-          tokenId: id,
-          amount: value,
-          contractAddress: log.address,
-          blockchain: BLOCKCHAIN,
-          contractType: ContractType.erc1155,
-        });
-      } else if (
-        CONTRACTS_TO_INDEX.some((contract) => contract.address == log.address) &&
-        log.topics[0] === erc1155.events.TransferBatch.topic
-      ) {
-        const { from, to, ids, amounts } = erc1155.events.TransferBatch.decode(log);
-        for (let i = 0; i < ids.length; i++) {
-          TransfersNfts.push({
-            id: uuidv4(),
-            block: log.block,
-            from: from,
-            to: to,
-            tokenId: ids[i],
-            amount: amounts[i],
-            contractAddress: log.address,
-            blockchain: BLOCKCHAIN,
-            contractType: ContractType.erc1155,
-          });
-        }
-      }
-    }
-  }
+  const blockService = new BlockService(ctx);
+  const transfers = await blockService.processBatchOfBlocks();
 
-  await processTransfersNfts(ctx, latestBlockNumber, cache, TransfersNfts);
-  await processTransfersTokens(ctx, latestBlockNumber, cache, TransfersTokens);
+  // TODO: Replace with universal process Transfer function
+  // await processTransfersNfts(ctx, latestBlockNumber, cache, TransfersNfts);
+  // await processTransfersTokens(ctx, latestBlockNumber, cache, TransfersTokens);
 
   await ctx.store.upsert([...cache.NftCollections.values()]);
   await ctx.store.upsert([...cache.TokenCollections.values()]);
