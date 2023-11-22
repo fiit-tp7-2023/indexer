@@ -10,14 +10,18 @@ import { Log } from '../processor';
 
 export class BlockService {
   ctx: Context;
-  transfers: TransferEvent[] = [];
+  nftsTransfers: TransferEvent[] = [];
+  tokenTransfers: TransferEvent[] = [];
   latestBlockNumber: number = 0;
-  constructor(_ctx: Context) {
+  blockchain: string;
+  constructor(_ctx: Context, _blockchain: string) {
     this.ctx = _ctx;
+    this.blockchain = _blockchain;
   }
 
-  async processBatchOfBlocks(): Promise<TransferEvent[]> {
-    this.transfers = [];
+  async processBatchOfBlocks(): Promise<{ nftsTransfers: TransferEvent[]; tokensTransfers: TransferEvent[] }> {
+    this.nftsTransfers = [];
+    this.tokenTransfers = [];
     this.latestBlockNumber = parseInt(await this.ctx._chain.client.call('eth_blockNumber'));
 
     for (let block of this.ctx.blocks) {
@@ -45,7 +49,7 @@ export class BlockService {
         }
       }
     }
-    return this.transfers;
+    return { nftsTransfers: this.nftsTransfers, tokensTransfers: this.tokenTransfers };
   }
 
   public async getLatestBlockNumber(refresh = false): Promise<number> {
@@ -89,7 +93,7 @@ export class BlockService {
     amount: bigint,
     contractType: ContractType,
   ) {
-    this.transfers.push({
+    const transfer = {
       id: uuidv4(),
       block: log.block,
       from: from,
@@ -99,6 +103,11 @@ export class BlockService {
       contractAddress: log.address,
       blockchain: BLOCKCHAIN,
       contractType: contractType,
-    });
+    };
+    if (contractType === ContractType.erc721) {
+      this.nftsTransfers.push(transfer);
+    } else {
+      this.tokenTransfers.push(transfer);
+    }
   }
 }

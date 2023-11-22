@@ -28,12 +28,21 @@ export interface TransferEvent {
   contractType: ContractType;
 }
 
-export interface Cache {
-  NftCollections: Map<string, NftCollectionEntity>;
-  TokenCollections: Map<string, TokenCollectionEntity>;
-  Nfts: Map<string, NftEntity>;
-  NftTransfers: NftTransferEntity[];
-  TokenTransfers: TokenTransferEntity[];
+export interface CollectionData {
+  id: string;
+  contractAddress: string;
+  blockchain: Blockchain;
+  contractType: ContractType;
+  createdAtBlock: number;
+}
+
+export interface NftData {
+  id: string;
+  tokenId: bigint;
+  contractAddress: string;
+  blockchain: Blockchain;
+  contractType: ContractType;
+  createdAtBlock: number;
 }
 
 export interface ContractMetadata {
