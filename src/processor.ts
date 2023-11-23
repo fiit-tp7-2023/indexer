@@ -13,6 +13,7 @@ import * as erc1155 from './abi/erc1155';
 import * as erc20 from './abi/erc20';
 import { Blockchain, ContractType } from './model';
 import { CONTRACTS_TO_INDEX } from './utils/constants';
+import { v1 } from 'uuid';
 
 export const BLOCKCHAIN = Blockchain.eth;
 
@@ -22,7 +23,7 @@ export const processor = new EvmBatchProcessor()
     chain: `https://rpc.ankr.com/eth/${process.env.ANKR_KEY}`,
   })
   .setFinalityConfirmation(10)
-  .setBlockRange({ from: 12287507 })
+  .setBlockRange({ from: 463474 })
   .setFields({
     log: {
       topics: true,

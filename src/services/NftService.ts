@@ -117,7 +117,6 @@ export class NftService {
     const newNfts = [...this.nftStorage.newEntities.values()];
     await this.fillTokensUri(this.ctx, newNfts);
     await fillNftsMetadata(this.ctx, newNfts);
-    console.log('newNfts', newNfts);
   }
 
   private async fillCollectionUris(collections: NftCollectionEntity[]): Promise<undefined> {

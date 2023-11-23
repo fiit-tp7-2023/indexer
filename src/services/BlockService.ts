@@ -25,6 +25,8 @@ export class BlockService {
     this.latestBlockNumber = parseInt(await this.ctx._chain.client.call('eth_blockNumber'));
 
     for (let block of this.ctx.blocks) {
+      if (block.logs.length != 0) {
+      }
       for (let log of block.logs) {
         if (!CONTRACTS_TO_INDEX.some((contract) => contract.address === log.address)) {
           continue;
@@ -33,10 +35,7 @@ export class BlockService {
           case erc721.events.Transfer.topic:
             if (log.topics.length === 4) {
               this.handleTransferEvent(log, ContractType.erc721);
-            }
-            break;
-          case erc20.events.Transfer.topic:
-            if (log.topics.length === 3) {
+            } else if (log.topics.length === 3) {
               this.handleTransferEvent(log, ContractType.erc20);
             }
             break;
@@ -104,7 +103,7 @@ export class BlockService {
       blockchain: BLOCKCHAIN,
       contractType: contractType,
     };
-    if (contractType === ContractType.erc721) {
+    if (contractType === ContractType.erc721 || contractType === ContractType.erc1155) {
       this.nftsTransfers.push(transfer);
     } else {
       this.tokenTransfers.push(transfer);
