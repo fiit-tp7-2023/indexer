@@ -25,8 +25,6 @@ export class BlockService {
     this.latestBlockNumber = parseInt(await this.ctx._chain.client.call('eth_blockNumber'));
 
     for (let block of this.ctx.blocks) {
-      if (block.logs.length != 0) {
-      }
       for (let log of block.logs) {
         if (!CONTRACTS_TO_INDEX.some((contract) => contract.address === log.address)) {
           continue;
@@ -71,7 +69,7 @@ export class BlockService {
       }
       case ContractType.erc1155: {
         const { from, to, id, value } = erc1155.events.TransferSingle.decode(log);
-        this.addTransferEvent(log, from, to, id, BigInt(1), ContractType.erc721);
+        this.addTransferEvent(log, from, to, id, value, ContractType.erc1155);
         break;
       }
     }
