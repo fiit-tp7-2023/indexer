@@ -32,13 +32,13 @@ export class BlockService {
         switch (log.topics[0]) {
           case erc721.events.Transfer.topic:
             if (log.topics.length === 4) {
-              this.handleTransferEvent(log, ContractType.erc721);
+              this.handleTransferEvent(log, ContractType.ERC721);
             } else if (log.topics.length === 3) {
-              this.handleTransferEvent(log, ContractType.erc20);
+              this.handleTransferEvent(log, ContractType.ERC20);
             }
             break;
           case erc1155.events.TransferSingle.topic:
-            this.handleTransferEvent(log, ContractType.erc1155);
+            this.handleTransferEvent(log, ContractType.ERC1155);
             break;
           case erc1155.events.TransferBatch.topic:
             this.handleERC1155BatchTransfer(log);
@@ -57,19 +57,19 @@ export class BlockService {
 
   private handleTransferEvent(log: Log, contractType: ContractType) {
     switch (contractType) {
-      case ContractType.erc20: {
+      case ContractType.ERC20: {
         const { from, to, value } = erc20.events.Transfer.decode(log);
-        this.addTransferEvent(log, from, to, BigInt(0), value, ContractType.erc20);
+        this.addTransferEvent(log, from, to, BigInt(0), value, ContractType.ERC20);
         break;
       }
-      case ContractType.erc721: {
+      case ContractType.ERC721: {
         const { from, to, tokenId } = erc721.events.Transfer.decode(log);
-        this.addTransferEvent(log, from, to, tokenId, BigInt(1), ContractType.erc721);
+        this.addTransferEvent(log, from, to, tokenId, BigInt(1), ContractType.ERC721);
         break;
       }
-      case ContractType.erc1155: {
+      case ContractType.ERC1155: {
         const { from, to, id, value } = erc1155.events.TransferSingle.decode(log);
-        this.addTransferEvent(log, from, to, id, value, ContractType.erc1155);
+        this.addTransferEvent(log, from, to, id, value, ContractType.ERC1155);
         break;
       }
     }
@@ -78,7 +78,7 @@ export class BlockService {
   private handleERC1155BatchTransfer(log: Log) {
     const { from, to, ids, amounts } = erc1155.events.TransferBatch.decode(log);
     ids.forEach((id, index) => {
-      this.addTransferEvent(log, from, to, id, amounts[index], ContractType.erc1155);
+      this.addTransferEvent(log, from, to, id, amounts[index], ContractType.ERC1155);
     });
   }
 
@@ -101,7 +101,7 @@ export class BlockService {
       blockchain: BLOCKCHAIN,
       contractType: contractType,
     };
-    if (contractType === ContractType.erc721 || contractType === ContractType.erc1155) {
+    if (contractType === ContractType.ERC721 || contractType === ContractType.ERC1155) {
       this.nftsTransfers.push(transfer);
     } else {
       this.tokenTransfers.push(transfer);

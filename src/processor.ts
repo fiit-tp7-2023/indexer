@@ -15,7 +15,7 @@ import { Blockchain, ContractType } from './model';
 import { CONTRACTS_TO_INDEX } from './utils/constants';
 import { v1 } from 'uuid';
 
-export const BLOCKCHAIN = Blockchain.eth;
+export const BLOCKCHAIN = Blockchain.ETH;
 
 export const processor = new EvmBatchProcessor()
   .setDataSource({
@@ -31,19 +31,19 @@ export const processor = new EvmBatchProcessor()
     },
   })
   .addLog({
-    address: CONTRACTS_TO_INDEX.filter((contract) => contract.type === ContractType.erc721).map(
+    address: CONTRACTS_TO_INDEX.filter((contract) => contract.type === ContractType.ERC721).map(
       (contract) => contract.address,
     ),
     topic0: [erc721.events.Transfer.topic],
   })
   .addLog({
-    address: CONTRACTS_TO_INDEX.filter((contract) => contract.type === ContractType.erc20).map(
+    address: CONTRACTS_TO_INDEX.filter((contract) => contract.type === ContractType.ERC20).map(
       (contract) => contract.address,
     ),
     topic0: [erc20.events.Transfer.topic],
   })
   .addLog({
-    address: CONTRACTS_TO_INDEX.filter((contract) => contract.type === ContractType.erc1155).map(
+    address: CONTRACTS_TO_INDEX.filter((contract) => contract.type === ContractType.ERC1155).map(
       (contract) => contract.address,
     ),
     topic0: [erc1155.events.TransferSingle.topic, erc1155.events.TransferBatch.topic],

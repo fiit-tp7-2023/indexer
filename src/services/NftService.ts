@@ -183,13 +183,13 @@ export class NftService {
       return;
     }
 
-    for (const contractType of [ContractType.erc721, ContractType.erc1155]) {
+    for (const contractType of [ContractType.ERC721, ContractType.ERC1155]) {
       const nfts = tokensToFetchUri.filter((token) => token.nftCollection.contractType == contractType);
       if (!nfts.length) continue;
       const calls = nfts.map((token) => [token.nftCollection.address, [token.tokenId]] as [string, any[]]);
       const multicallContract = new Multicall(ctx, { height: latestBlockNumber }, multicall.address);
       let results;
-      if (contractType == ContractType.erc721) {
+      if (contractType == ContractType.ERC721) {
         results = await multicallContract.tryAggregate(erc721.functions.tokenURI, calls, multicall.batchSize);
       } else {
         results = await multicallContract.tryAggregate(erc1155.functions.uri, calls, multicall.batchSize);

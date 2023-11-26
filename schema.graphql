@@ -1,13 +1,13 @@
 enum Blockchain {
-  eth
-  polygon
-  bsc
+  ETH
+  POLYGON
+  BSC
 }
 
 enum ContractType {
-  erc20
-  erc721
-  erc1155
+  ERC20
+  ERC721
+  ERC1155
 }
 
 type NftCollectionEntity @entity {
