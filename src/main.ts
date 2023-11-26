@@ -17,6 +17,52 @@ processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
   await processTransfers(ctx, nftService, tokenService, nftsTransfers, tokensTransfers);
 });
 
+async function processNftTransfers(nftService: NftService, nftsTransfers: TransferEvent[]) {
+  const nftTransferEntities = [];
+  for (const transfer of nftsTransfers) {
+    const nftId = nftService.getNftId(transfer.contractAddress, transfer.blockchain, transfer.tokenId);
+    const nft = await nftService.nftStorage.get(nftId);
+    if (nft) {
+      nftTransferEntities.push(
+        new NftTransferEntity({
+          id: transfer.id,
+          fromAddress: transfer.from,
+          toAddress: transfer.to,
+          nft: nft,
+          amount: transfer.amount,
+          createdAtBlock: transfer.block.height,
+        }),
+      );
+    } else {
+      throw new Error(`NFT with id ${nftId} not found`);
+    }
+  }
+  return nftTransferEntities;
+}
+
+async function processTokenTransfers(tokenService: TokenService, tokensTransfers: TransferEvent[]) {
+  const tokenTransferEntities = [];
+  for (const transfer of tokensTransfers) {
+    const tokenId = tokenService.getTokenCollectionId(transfer.contractAddress, transfer.blockchain);
+    const token = await tokenService.tokenCollectionStorage.get(tokenId);
+    if (token) {
+      tokenTransferEntities.push(
+        new TokenTransferEntity({
+          id: transfer.id,
+          fromAddress: transfer.from,
+          toAddress: transfer.to,
+          token: token,
+          amount: transfer.amount,
+          createdAtBlock: transfer.block.height,
+        }),
+      );
+    } else {
+      throw new Error(`Token with id ${tokenId} not found`);
+    }
+  }
+  return tokenTransferEntities;
+}
+
 async function processTransfers(
   ctx: Context,
   nftService: NftService,
@@ -24,45 +70,17 @@ async function processTransfers(
   nftsTransfers: TransferEvent[],
   tokensTransfers: TransferEvent[],
 ) {
-  const nftTransferEntities = [];
-  const tokenTransferEntities = [];
-  for (const nftTransfer of nftsTransfers) {
-    const nftId = nftService.getNftId(nftTransfer.contractAddress, nftTransfer.blockchain, nftTransfer.tokenId);
-    const nft = await nftService.nftStorage.get(nftId);
-    if (nft !== undefined) {
-      nftTransferEntities.push(
-        new NftTransferEntity({
-          id: nftTransfer.id,
-          fromAddress: nftTransfer.from,
-          toAddress: nftTransfer.to,
-          nft: nft,
-          amount: nftTransfer.amount,
-          createdAtBlock: nftTransfer.block.height,
-        }),
-      );
-    } else {
-      ctx.log.error(`NFT with id ${nftId} not found`);
-    }
-  }
-  for (const tokenTransfer of tokensTransfers) {
-    const tokenId = tokenService.getTokenCollectionId(tokenTransfer.contractAddress, tokenTransfer.blockchain);
-    const token = await tokenService.tokenCollectionStorage.get(tokenId);
-    if (token !== undefined) {
-      tokenTransferEntities.push(
-        new TokenTransferEntity({
-          id: tokenTransfer.id,
-          fromAddress: tokenTransfer.from,
-          toAddress: tokenTransfer.to,
-          token: token,
-          amount: tokenTransfer.amount,
-          createdAtBlock: tokenTransfer.block.height,
-        }),
-      );
-    } else {
-      ctx.log.error(`Token with id ${tokenId} not found`);
-    }
-  }
+  try {
+    const nftTransferEntities = await processNftTransfers(nftService, nftsTransfers);
+    const tokenTransferEntities = await processTokenTransfers(tokenService, tokensTransfers);
 
-  await ctx.store.insert(nftTransferEntities);
-  await ctx.store.insert(tokenTransferEntities);
+    await ctx.store.insert(nftTransferEntities);
+    await ctx.store.insert(tokenTransferEntities);
+  } catch (error) {
+    if (error instanceof Error) {
+      ctx.log.error(error.message);
+    } else {
+      ctx.log.error('An unknown error occurred');
+    }
+  }
 }
