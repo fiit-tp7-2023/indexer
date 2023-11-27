@@ -179,18 +179,23 @@ export async function fillNftsMetadata(ctx: Context, nfts: NftEntity[], batchSiz
   }
 }
 
+function get_image_uri(metadata: any): string | undefined {
+  if (typeof metadata?.image === 'string') {
+    return metadata.image;
+  } else if (typeof metadata?.thumbnailUri === 'string') {
+    return metadata.thumbnailUri;
+  } else if (typeof metadata?.mediaUri === 'string') {
+    return metadata.mediaUri;
+  } else {
+    return undefined;
+  }
+}
+
 export async function mapCollectionMetadata(rawMetadata: any): Promise<ContractMetadata> {
   return {
     name: typeof rawMetadata?.name === 'string' ? rawMetadata.name : undefined,
     description: typeof rawMetadata?.description === 'string' ? rawMetadata.description : undefined,
-    image:
-      typeof rawMetadata?.image === 'string'
-        ? rawMetadata.image
-        : typeof rawMetadata?.thumbnailUri === 'string'
-          ? rawMetadata.thumbnailUri
-          : typeof rawMetadata?.mediaUri === 'string'
-            ? rawMetadata.mediaUri
-            : undefined,
+    image: get_image_uri(rawMetadata),
     externalLink: typeof rawMetadata?.external_link === 'string' ? rawMetadata.external_link : undefined,
   };
 }
@@ -199,14 +204,7 @@ export async function mapTokenMetadata(rawMetadata: any): Promise<TokenMetadata>
   return {
     name: typeof rawMetadata?.name === 'string' ? rawMetadata.name : undefined,
     description: typeof rawMetadata?.description === 'string' ? rawMetadata.description : undefined,
-    image:
-      typeof rawMetadata?.image === 'string'
-        ? rawMetadata.image
-        : typeof rawMetadata?.thumbnailUri === 'string'
-          ? rawMetadata.thumbnailUri
-          : typeof rawMetadata?.mediaUri === 'string'
-            ? rawMetadata.mediaUri
-            : undefined,
+    image: get_image_uri(rawMetadata),
     externalUrl: typeof rawMetadata?.external_url === 'string' ? rawMetadata.external_url : undefined,
     animationUrl: typeof rawMetadata?.animation_url === 'string' ? rawMetadata.animation_url : undefined,
     attributes:

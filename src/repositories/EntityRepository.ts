@@ -32,7 +32,7 @@ export class EntityRepository<T extends Entity> {
   }
 
   async get(id: string): Promise<T | undefined> {
-    return this.existingEntities.get(id) || this.newEntities.get(id);
+    return this.existingEntities.get(id) ?? this.newEntities.get(id);
   }
 
   async getOrFail(id: string): Promise<T | undefined> {
