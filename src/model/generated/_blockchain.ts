@@ -1,5 +1,5 @@
 export enum Blockchain {
-    eth = "eth",
-    polygon = "polygon",
-    bsc = "bsc",
+    ETH = "ETH",
+    POLYGON = "POLYGON",
+    BSC = "BSC",
 }

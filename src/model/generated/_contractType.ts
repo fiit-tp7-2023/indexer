@@ -1,5 +1,5 @@
 export enum ContractType {
-    erc20 = "erc20",
-    erc721 = "erc721",
-    erc1155 = "erc1155",
+    ERC20 = "ERC20",
+    ERC721 = "ERC721",
+    ERC1155 = "ERC1155",
 }
