@@ -37,7 +37,7 @@ export class TokenService {
   }
 
   public async loadAndCreateTokens(tokensTransfers: TransferEvent[]): Promise<void> {
-    const tokenCollections = await this.getTokenCollectionsInTransferEvents(tokensTransfers);
+    const tokenCollections = this.getTokenCollectionsInTransferEvents(tokensTransfers);
     const { notFound } = await this.tokenCollectionStorage.loadEntitiesFromStorage(
       new Set([...tokenCollections.keys()]),
     );
