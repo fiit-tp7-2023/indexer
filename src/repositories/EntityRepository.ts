@@ -1,7 +1,6 @@
-import { Entity, EntityClass } from '@subsquid/typeorm-store';
+import { Entity } from '@subsquid/typeorm-store';
 import { Context } from '../processor';
 import { splitIntoBatches } from '../utils/helpers';
-import { NftEntity } from '../model';
 import { FindOptionsWhere, In } from 'typeorm';
 
 export class EntityRepository<T extends Entity> {

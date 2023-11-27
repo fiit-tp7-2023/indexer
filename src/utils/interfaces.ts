@@ -1,12 +1,4 @@
-import {
-  Blockchain,
-  ContractType,
-  NftCollectionEntity,
-  NftEntity,
-  NftTransferEntity,
-  TokenCollectionEntity,
-  TokenTransferEntity,
-} from '../model';
+import { Blockchain, ContractType } from '../model';
 import { Block } from '../processor';
 
 export interface IndexContract {

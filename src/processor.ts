@@ -13,7 +13,6 @@ import * as erc1155 from './abi/erc1155';
 import * as erc20 from './abi/erc20';
 import { Blockchain, ContractType } from './model';
 import { CONTRACTS_TO_INDEX } from './utils/constants';
-import { v1 } from 'uuid';
 
 export const BLOCKCHAIN = Blockchain.ETH;
 
