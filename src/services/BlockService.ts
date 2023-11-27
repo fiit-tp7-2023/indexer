@@ -1,4 +1,4 @@
-import { BLOCKCHAIN, Context } from '../processor';
+import { BLOCKCHAIN, Context, Log } from '../processor';
 import { CONTRACTS_TO_INDEX } from '../utils/constants';
 import { TransferEvent } from '../utils/interfaces';
 import * as erc1155 from '../abi/erc1155';
@@ -6,7 +6,6 @@ import * as erc20 from '../abi/erc20';
 import * as erc721 from '../abi/erc721';
 import { v4 as uuidv4 } from 'uuid';
 import { ContractType } from '../model';
-import { Log } from '../processor';
 
 export class BlockService {
   ctx: Context;

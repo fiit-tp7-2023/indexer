@@ -10,8 +10,7 @@ export const IPFS_GATEWAYS = [
   'https://infura-ipfs.io',
   'https://kodadot1.infura-ipfs.io',
 ];
-import { NftEntity } from '../model';
-import { NftCollectionEntity } from '../model';
+import { NftEntity, NftCollectionEntity } from '../model';
 import { ContractMetadata, TokenMetadata, UrisBySource, ipfsUri } from './interfaces';
 import { splitIntoBatches } from './helpers';
 
