@@ -8,6 +8,7 @@ import * as erc721 from '../abi/erc721';
 import * as erc1155 from '../abi/erc1155';
 import { loadNftCollectionsMetadata, loadNftsMetadata } from '../utils/metadata';
 import { EntityRepository } from '../repositories/EntityRepository';
+import { filterNotFound } from '../utils/helpers';
 
 export class NftService {
   nftStorage: EntityRepository<NftEntity>;
@@ -47,7 +48,9 @@ export class NftService {
   public async loadAndCreateNfts(nftsTransfers: TransferEvent[]): Promise<void> {
     const nfts = await this.getNftsInTransferEvents(nftsTransfers);
     const { notFound } = await this.nftStorage.loadEntitiesFromStorage(new Set(nfts.keys()));
-    const notFoundNfts = [...nfts].filter(([key, value]) => notFound.has(key)).map(([key, value]) => value);
+
+    const notFoundNfts: NftData[] = filterNotFound<NftData>(nfts, notFound);
+
     await this.createNfts(notFoundNfts);
     await this.loadMetadataForNewCollections();
     await this.loadMetadataForNewNfts();
@@ -74,9 +77,9 @@ export class NftService {
     // Get or create collections for nfts
     const collections = await this.getCollectionsInNfts(nfts);
     const { notFound } = await this.nftCollectionStorage.loadEntitiesFromStorage(new Set(collections.keys()));
-    const notFoundCollections = [...collections]
-      .filter(([key, value]) => notFound.has(key))
-      .map(([key, value]) => value);
+
+    const notFoundCollections: CollectionData[] = filterNotFound<CollectionData>(collections, notFound);
+
     await this.createNftCollections(notFoundCollections);
 
     // Create nfts

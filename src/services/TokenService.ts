@@ -6,6 +6,7 @@ import { MULTICALL_CONTRACTS_BY_BLOCKCHAIN } from '../utils/constants';
 import { CollectionData, TransferEvent } from '../utils/interfaces';
 import { BlockService } from './BlockService';
 import * as erc20 from '../abi/erc20';
+import { filterNotFound } from '../utils/helpers';
 
 export class TokenService {
   ctx: Context;
@@ -39,10 +40,9 @@ export class TokenService {
   public async loadAndCreateTokens(tokensTransfers: TransferEvent[]): Promise<void> {
     const tokenCollections = this.getTokenCollectionsInTransferEvents(tokensTransfers);
     const { notFound } = await this.tokenCollectionStorage.loadEntitiesFromStorage(new Set(tokenCollections.keys()));
-    // TODO use reduce instead of filter
-    const notFoundTokenCollections = [...tokenCollections]
-      .filter(([key, value]) => notFound.has(key))
-      .map(([key, value]) => value);
+
+    const notFoundTokenCollections: CollectionData[] = filterNotFound<CollectionData>(tokenCollections, notFound);
+
     await this.createTokenCollections(notFoundTokenCollections);
     await this.loadNewTokensMetadata([...this.tokenCollectionStorage.newEntities.values()]);
     await this.tokenCollectionStorage.commit();
