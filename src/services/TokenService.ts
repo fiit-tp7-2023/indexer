@@ -6,15 +6,15 @@ import { MULTICALL_CONTRACTS_BY_BLOCKCHAIN } from '../utils/constants';
 import { CollectionData, TransferEvent } from '../utils/interfaces';
 import { BlockService } from './BlockService';
 import * as erc20 from '../abi/erc20';
+import { filterNotFound } from '../utils/helpers';
 
 export class TokenService {
-  ctx: Context;
-  blockService: BlockService;
   tokenCollectionStorage: EntityRepository<TokenCollectionEntity>;
-  constructor(_ctx: Context, _blockService: BlockService) {
-    this.ctx = _ctx;
-    this.blockService = _blockService;
-    this.tokenCollectionStorage = new EntityRepository<TokenCollectionEntity>(this.ctx, TokenCollectionEntity);
+  constructor(
+    private ctx: Context,
+    private blockService: BlockService,
+  ) {
+    this.tokenCollectionStorage = new EntityRepository(this.ctx, TokenCollectionEntity);
   }
 
   public getTokenCollectionId(contractAddress: string, blockchain: string): string {
@@ -25,6 +25,7 @@ export class TokenService {
     const tokenCollections = new Map();
     for (const event of events) {
       const tokenCollectionId = this.getTokenCollectionId(event.contractAddress, event.blockchain);
+      if (tokenCollections.has(tokenCollectionId)) continue;
       tokenCollections.set(tokenCollectionId, {
         id: tokenCollectionId,
         contractAddress: event.contractAddress,
@@ -38,16 +39,17 @@ export class TokenService {
 
   public async loadAndCreateTokens(tokensTransfers: TransferEvent[]): Promise<void> {
     const tokenCollections = this.getTokenCollectionsInTransferEvents(tokensTransfers);
-    const { notFound } = await this.tokenCollectionStorage.loadEntitiesFromStorage(
-      new Set([...tokenCollections.keys()]),
-    );
-    const notFoundTokenCollections = new Map([...tokenCollections].filter(([key, value]) => notFound.has(key)));
-    await this.createTokenCollections([...notFoundTokenCollections.values()]);
-    await this.fillNewTokensMetadata([...this.tokenCollectionStorage.newEntities.values()]);
-    await this.tokenCollectionStorage.saveNewIntoStorage();
+    const { notFound } = await this.tokenCollectionStorage.loadEntitiesFromStorage(new Set(tokenCollections.keys()));
+
+    const notFoundTokenCollections: CollectionData[] = filterNotFound<CollectionData>(tokenCollections, notFound);
+
+    await this.createTokenCollections(notFoundTokenCollections);
+    await this.loadNewTokensMetadata();
+    await this.tokenCollectionStorage.commit();
   }
 
-  public async fillNewTokensMetadata(collections: TokenCollectionEntity[]): Promise<void> {
+  public async loadNewTokensMetadata(): Promise<void> {
+    const collections = [...this.tokenCollectionStorage.newEntities.values()];
     const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(this.blockService.blockchain);
     if (!multicall) {
       this.ctx.log.error(`Multicall contract for ${this.blockService.blockchain} not defined`);

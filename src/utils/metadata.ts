@@ -154,7 +154,7 @@ export async function fetchIpfsMetadata(ctx: Context, ipfsUris: ipfsUri[]): Prom
   return result;
 }
 
-export async function fillNftCollectionsMetadata(ctx: Context, collections: NftCollectionEntity[]) {
+export async function loadNftCollectionsMetadata(ctx: Context, collections: NftCollectionEntity[]) {
   const collectionsWithUri = collections.map((obj) => obj.uri).filter((uri): uri is string => uri != null);
   ctx.log.info(`Fetching collection metadata from contract uri for ${collectionsWithUri.length} collections`);
   const filledMetadata = await fetchAllMetadata(ctx, collectionsWithUri);
@@ -165,7 +165,7 @@ export async function fillNftCollectionsMetadata(ctx: Context, collections: NftC
   }
 }
 
-export async function fillNftsMetadata(ctx: Context, nfts: NftEntity[], batchSize = 100, sleep = 3000) {
+export async function loadNftsMetadata(ctx: Context, nfts: NftEntity[], batchSize = 100, sleep = 3000) {
   for (const batch of splitIntoBatches(nfts, batchSize)) {
     const tokensWithUri = batch.map((obj) => obj.uri).filter((uri): uri is string => uri != null);
     ctx.log.info(`Fetching token metadata for ${tokensWithUri.length} NFTs`);

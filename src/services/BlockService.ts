@@ -8,15 +8,13 @@ import { v4 as uuidv4 } from 'uuid';
 import { ContractType } from '../model';
 
 export class BlockService {
-  ctx: Context;
   nftsTransfers: TransferEvent[] = [];
   tokenTransfers: TransferEvent[] = [];
   latestBlockNumber: number = 0;
-  blockchain: string;
-  constructor(_ctx: Context, _blockchain: string) {
-    this.ctx = _ctx;
-    this.blockchain = _blockchain;
-  }
+  constructor(
+    private ctx: Context,
+    public blockchain: string,
+  ) {}
 
   async processBatchOfBlocks(): Promise<{ nftsTransfers: TransferEvent[]; tokensTransfers: TransferEvent[] }> {
     this.nftsTransfers = [];
