@@ -26,6 +26,7 @@ export class TokenService {
     const tokenCollections = new Map();
     for (const event of events) {
       const tokenCollectionId = this.getTokenCollectionId(event.contractAddress, event.blockchain);
+      if (tokenCollections.has(tokenCollectionId)) continue;
       tokenCollections.set(tokenCollectionId, {
         id: tokenCollectionId,
         contractAddress: event.contractAddress,
@@ -44,11 +45,12 @@ export class TokenService {
     const notFoundTokenCollections: CollectionData[] = filterNotFound<CollectionData>(tokenCollections, notFound);
 
     await this.createTokenCollections(notFoundTokenCollections);
-    await this.loadNewTokensMetadata([...this.tokenCollectionStorage.newEntities.values()]);
+    await this.loadNewTokensMetadata();
     await this.tokenCollectionStorage.commit();
   }
 
-  public async loadNewTokensMetadata(collections: TokenCollectionEntity[]): Promise<void> {
+  public async loadNewTokensMetadata(): Promise<void> {
+    const collections = [...this.tokenCollectionStorage.newEntities.values()];
     const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(this.blockService.blockchain);
     if (!multicall) {
       this.ctx.log.error(`Multicall contract for ${this.blockService.blockchain} not defined`);

@@ -32,7 +32,7 @@ export class NftService {
     const nfts = new Map();
     for (const event of events) {
       const nftId = this.getNftId(event.contractAddress, event.blockchain, event.tokenId);
-      // TODO: check if nft exists in storage
+      if (nfts.has(nftId)) continue;
       nfts.set(nftId, {
         id: nftId,
         tokenId: event.tokenId,
@@ -62,6 +62,7 @@ export class NftService {
     const collections = new Map();
     for (const nft of nfts) {
       const collectionId = this.getNftCollectionId(nft.contractAddress, nft.blockchain);
+      if (collections.has(collectionId)) continue;
       collections.set(collectionId, {
         id: collectionId,
         contractAddress: nft.contractAddress,
