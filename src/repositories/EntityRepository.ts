@@ -41,7 +41,7 @@ export class EntityRepository<T extends Entity> {
     return entity;
   }
 
-  async saveNewIntoStorage(): Promise<void> {
+  async commit(): Promise<void> {
     await this.ctx.store.insert([...this.newEntities.values()]);
   }
 }

@@ -6,19 +6,18 @@ import { Multicall } from '../abi/multicall';
 import { MULTICALL_CONTRACTS_BY_BLOCKCHAIN } from '../utils/constants';
 import * as erc721 from '../abi/erc721';
 import * as erc1155 from '../abi/erc1155';
-import { fillNftCollectionsMetadata, fillNftsMetadata } from '../utils/metadata';
+import { loadNftCollectionsMetadata, loadNftsMetadata } from '../utils/metadata';
 import { EntityRepository } from '../repositories/EntityRepository';
 
 export class NftService {
-  ctx: Context;
-  blockService: BlockService;
   nftStorage: EntityRepository<NftEntity>;
   nftCollectionStorage: EntityRepository<NftCollectionEntity>;
-  constructor(_ctx: Context, _blockService: BlockService) {
-    this.ctx = _ctx;
-    this.blockService = _blockService;
-    this.nftStorage = new EntityRepository<NftEntity>(this.ctx, NftEntity);
-    this.nftCollectionStorage = new EntityRepository<NftCollectionEntity>(this.ctx, NftCollectionEntity);
+  constructor(
+    private ctx: Context,
+    private blockService: BlockService,
+  ) {
+    this.nftStorage = new EntityRepository(this.ctx, NftEntity);
+    this.nftCollectionStorage = new EntityRepository(this.ctx, NftCollectionEntity);
   }
 
   public getNftId(contractAddress: string, blockchain: string, tokenId: bigint): string {
@@ -32,6 +31,7 @@ export class NftService {
     const nfts = new Map();
     for (const event of events) {
       const nftId = this.getNftId(event.contractAddress, event.blockchain, event.tokenId);
+      // TODO: check if nft exists in storage
       nfts.set(nftId, {
         id: nftId,
         tokenId: event.tokenId,
@@ -46,13 +46,13 @@ export class NftService {
 
   public async loadAndCreateNfts(nftsTransfers: TransferEvent[]): Promise<void> {
     const nfts = await this.getNftsInTransferEvents(nftsTransfers);
-    const { notFound } = await this.nftStorage.loadEntitiesFromStorage(new Set([...nfts.keys()]));
-    const notFoundNfts = new Map([...nfts].filter(([key, value]) => notFound.has(key)));
-    await this.createNfts([...notFoundNfts.values()]);
-    await this.fillMetadataForNewCollections();
-    await this.fillMetadataForNewNfts();
-    await this.nftCollectionStorage.saveNewIntoStorage();
-    await this.nftStorage.saveNewIntoStorage();
+    const { notFound } = await this.nftStorage.loadEntitiesFromStorage(new Set(nfts.keys()));
+    const notFoundNfts = [...nfts].filter(([key, value]) => notFound.has(key)).map(([key, value]) => value);
+    await this.createNfts(notFoundNfts);
+    await this.loadMetadataForNewCollections();
+    await this.loadMetadataForNewNfts();
+    await this.nftCollectionStorage.commit();
+    await this.nftStorage.commit();
   }
 
   public async getCollectionsInNfts(nfts: NftData[]): Promise<Map<string, CollectionData>> {
@@ -73,9 +73,11 @@ export class NftService {
   private async createNfts(nfts: NftData[]): Promise<void> {
     // Get or create collections for nfts
     const collections = await this.getCollectionsInNfts(nfts);
-    const { notFound } = await this.nftCollectionStorage.loadEntitiesFromStorage(new Set([...collections.keys()]));
-    const notFoundCollections = new Map([...collections].filter(([key, value]) => notFound.has(key)));
-    await this.createNftCollections([...notFoundCollections.values()]);
+    const { notFound } = await this.nftCollectionStorage.loadEntitiesFromStorage(new Set(collections.keys()));
+    const notFoundCollections = [...collections]
+      .filter(([key, value]) => notFound.has(key))
+      .map(([key, value]) => value);
+    await this.createNftCollections(notFoundCollections);
 
     // Create nfts
     for (const nft of nfts) {
@@ -104,22 +106,22 @@ export class NftService {
     }
   }
 
-  public async fillMetadataForNewCollections(): Promise<undefined> {
+  public async loadMetadataForNewCollections(): Promise<undefined> {
     const newCollections = [...this.nftCollectionStorage.newEntities.values()];
-    await this.fillCollectionUris(newCollections);
+    await this.loadCollectionUris(newCollections);
     // Fill collection Data only if collection does not contains ContractURI
-    await this.fillCollectionData(newCollections.filter((collection) => collection.uri == null));
+    await this.loadCollectionData(newCollections.filter((collection) => collection.uri == null));
     // Fill collection metadata where uri is not null
-    await fillNftCollectionsMetadata(this.ctx, newCollections);
+    await loadNftCollectionsMetadata(this.ctx, newCollections);
   }
 
-  public async fillMetadataForNewNfts(): Promise<undefined> {
+  public async loadMetadataForNewNfts(): Promise<undefined> {
     const newNfts = [...this.nftStorage.newEntities.values()];
-    await this.fillTokensUri(this.ctx, newNfts);
-    await fillNftsMetadata(this.ctx, newNfts);
+    await this.loadTokensUri(this.ctx, newNfts);
+    await loadNftsMetadata(this.ctx, newNfts);
   }
 
-  private async fillCollectionUris(collections: NftCollectionEntity[]): Promise<undefined> {
+  private async loadCollectionUris(collections: NftCollectionEntity[]): Promise<undefined> {
     const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(this.blockService.blockchain);
     if (!multicall) {
       this.ctx.log.error(`Multicall contract for ${this.blockService.blockchain} not defined`);
@@ -151,7 +153,7 @@ export class NftService {
     }
   }
 
-  private async fillCollectionData(collections: NftCollectionEntity[]): Promise<undefined> {
+  private async loadCollectionData(collections: NftCollectionEntity[]): Promise<undefined> {
     const latestBlockNumber = await this.blockService.getLatestBlockNumber();
     const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(this.blockService.blockchain);
     if (!multicall) {
@@ -169,7 +171,7 @@ export class NftService {
     }
   }
 
-  private async fillTokensUri(ctx: Context, nfts: NftEntity[]): Promise<void> {
+  private async loadTokensUri(ctx: Context, nfts: NftEntity[]): Promise<void> {
     const tokensToFetchUri: NftEntity[] = nfts.filter((nft) => !nft.nftCollection.baseUri);
     nfts.forEach((nft) => {
       if (nft.nftCollection.baseUri) {
