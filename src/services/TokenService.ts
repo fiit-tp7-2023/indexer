@@ -9,13 +9,12 @@ import * as erc20 from '../abi/erc20';
 import { filterNotFound } from '../utils/helpers';
 
 export class TokenService {
-  ctx: Context;
-  blockService: BlockService;
   tokenCollectionStorage: EntityRepository<TokenCollectionEntity>;
-  constructor(_ctx: Context, _blockService: BlockService) {
-    this.ctx = _ctx;
-    this.blockService = _blockService;
-    this.tokenCollectionStorage = new EntityRepository<TokenCollectionEntity>(this.ctx, TokenCollectionEntity);
+  constructor(
+    private ctx: Context,
+    private blockService: BlockService,
+  ) {
+    this.tokenCollectionStorage = new EntityRepository(this.ctx, TokenCollectionEntity);
   }
 
   public getTokenCollectionId(contractAddress: string, blockchain: string): string {
