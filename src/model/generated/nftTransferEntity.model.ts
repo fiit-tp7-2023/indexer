@@ -1,6 +1,7 @@
 import {Entity as Entity_, Column as Column_, PrimaryColumn as PrimaryColumn_, ManyToOne as ManyToOne_, Index as Index_} from "typeorm"
 import * as marshal from "./marshal"
 import {NftEntity} from "./nftEntity.model"
+import {AccountEntity} from "./accountEntity.model"
 
 @Entity_()
 export class NftTransferEntity {
@@ -16,12 +17,12 @@ export class NftTransferEntity {
     nft!: NftEntity
 
     @Index_()
-    @Column_("text", {nullable: false})
-    fromAddress!: string
+    @ManyToOne_(() => AccountEntity, {nullable: true})
+    fromAddress!: AccountEntity
 
     @Index_()
-    @Column_("text", {nullable: false})
-    toAddress!: string
+    @ManyToOne_(() => AccountEntity, {nullable: true})
+    toAddress!: AccountEntity
 
     @Index_()
     @Column_("numeric", {transformer: marshal.bigintTransformer, nullable: false})

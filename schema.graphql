@@ -10,6 +10,15 @@ enum ContractType {
   ERC1155
 }
 
+type AccountEntity @entity {
+  id: ID!
+  createdAtBlock: Int! @index
+  nftTrasnfersFrom: [NftTransferEntity] @derivedFrom(field: "fromAddress")
+  nftTrasnfersTo: [NftTransferEntity] @derivedFrom(field: "toAddress")
+  tokenTrasnfersFrom: [TokenTransferEntity] @derivedFrom(field: "fromAddress")
+  tokenTrasnfersTo: [TokenTransferEntity] @derivedFrom(field: "toAddress")
+}
+
 type NftCollectionEntity @entity {
   id: ID!
   address: String! @index
@@ -63,8 +72,8 @@ type NftEntity @entity {
 type NftTransferEntity @entity {
   id: ID!
   nft: NftEntity!
-  fromAddress: String! @index
-  toAddress: String! @index
+  fromAddress: AccountEntity! @index
+  toAddress: AccountEntity! @index
   amount: BigInt! @index
   createdAtBlock: Int! @index
 }
@@ -72,8 +81,8 @@ type NftTransferEntity @entity {
 type TokenTransferEntity @entity {
   id: ID!
   token: TokenCollectionEntity!
-  fromAddress: String! @index
-  toAddress: String! @index
+  fromAddress: AccountEntity! @index
+  toAddress: AccountEntity! @index
   amount: BigInt! @index
   createdAtBlock: Int! @index
 }

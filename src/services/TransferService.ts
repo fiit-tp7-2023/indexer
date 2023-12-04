@@ -1,12 +1,14 @@
 import { NftTransferEntity, TokenTransferEntity } from '../model';
 import { Context } from '../processor';
 import { TransferEvent } from '../utils/interfaces';
+import { AccountService } from './AccountService';
 import { NftService } from './NftService';
 import { TokenService } from './TokenService';
 
 export class TransferService {
   constructor(
     private ctx: Context,
+    private accuntService: AccountService,
     private nftService: NftService,
     private tokenService: TokenService,
   ) {}
@@ -20,8 +22,8 @@ export class TransferService {
         nftTransferEntities.push(
           new NftTransferEntity({
             id: transfer.id,
-            fromAddress: transfer.from,
-            toAddress: transfer.to,
+            fromAddress: await this.accuntService.accountStorage.getOrFail(transfer.from),
+            toAddress: await this.accuntService.accountStorage.getOrFail(transfer.to),
             nft: nft,
             amount: transfer.amount,
             createdAtBlock: transfer.block.height,
@@ -43,8 +45,8 @@ export class TransferService {
         tokenTransferEntities.push(
           new TokenTransferEntity({
             id: transfer.id,
-            fromAddress: transfer.from,
-            toAddress: transfer.to,
+            fromAddress: await this.accuntService.accountStorage.getOrFail(transfer.from),
+            toAddress: await this.accuntService.accountStorage.getOrFail(transfer.to),
             token: token,
             amount: transfer.amount,
             createdAtBlock: transfer.block.height,
