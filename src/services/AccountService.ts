@@ -1,4 +1,3 @@
-import { Entity } from '@subsquid/typeorm-store';
 import { EntityRepository } from '../repositories/EntityRepository';
 import { AccountEntity } from '../model';
 import { Context } from '../processor';
