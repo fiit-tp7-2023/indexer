@@ -35,7 +35,7 @@ export class EntityRepository<T extends Entity> {
     return this.existingEntities.get(id) ?? this.newEntities.get(id);
   }
 
-  async getOrFail(id: string): Promise<T | undefined> {
+  async getOrFail(id: string): Promise<T> {
     const entity = await this.get(id);
     if (!entity) throw new Error(`Entity ${this.entityClass.name} with id ${id} not found`);
     return entity;
