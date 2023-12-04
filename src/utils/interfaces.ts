@@ -44,6 +44,11 @@ export interface ContractMetadata {
   externalLink?: string;
 }
 
+export interface AccountData {
+  id: string;
+  createdAtBlock: number;
+}
+
 export interface TokenMetadata {
   name?: string;
   description?: string;
