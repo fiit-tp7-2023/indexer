@@ -1,3 +1,4 @@
+export * from "./accountEntity.model"
 export * from "./nftCollectionEntity.model"
 export * from "./_blockchain"
 export * from "./_contractType"
