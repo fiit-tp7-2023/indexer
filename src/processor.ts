@@ -13,7 +13,7 @@ import * as erc1155 from './abi/erc1155';
 import * as erc20 from './abi/erc20';
 import { Blockchain, ContractType } from './model';
 import { CONTRACTS_TO_INDEX } from './utils/constants';
-
+import { INDEX_CONFIG } from './utils/constants';
 export const BLOCKCHAIN = Blockchain.ETH;
 
 export const processor = new EvmBatchProcessor()
@@ -21,8 +21,8 @@ export const processor = new EvmBatchProcessor()
     archive: lookupArchive('eth-mainnet'),
     chain: `https://rpc.ankr.com/eth/${process.env.ANKR_KEY}`,
   })
-  .setFinalityConfirmation(10)
-  .setBlockRange({ from: 4528859 })
+  .setFinalityConfirmation(INDEX_CONFIG.ETH.finality_confirmation)
+  .setBlockRange(INDEX_CONFIG.ETH.block_range)
   .setFields({
     log: {
       topics: true,

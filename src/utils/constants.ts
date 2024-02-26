@@ -3,6 +3,13 @@ import { IndexContract, MulticallContract } from './interfaces';
 
 export const ZERO_ADDRESS = 0x0000000000000000000000000000000000000000;
 
+export const INDEX_CONFIG = {
+	ETH: {
+		block_range: { from: 4528859 },
+		finality_confirmation: 10,
+	}
+}
+
 export const CONTRACTS_TO_INDEX: IndexContract[] = [
   {
     address: '0xBC4CA0EdA7647A8aB7C2061c2E118A18a936f13D'.toLowerCase(), // 12287507
