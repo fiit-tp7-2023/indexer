@@ -19,7 +19,7 @@ export const BLOCKCHAIN = Blockchain.ETH;
 export const processor = new EvmBatchProcessor()
   .setDataSource({
     archive: lookupArchive('eth-mainnet'),
-    chain: `https://rpc.ankr.com/eth/${process.env.ANKR_KEY}`,
+    chain: process.env.ETH_RPC_URL || 'https://rpc.ankr.com/eth',
   })
   .setFinalityConfirmation(INDEX_CONFIG.ETH.finality_confirmation)
   .setBlockRange(INDEX_CONFIG.ETH.block_range)
