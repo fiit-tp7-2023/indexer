@@ -12,8 +12,7 @@ import * as erc721 from './abi/erc721';
 import * as erc1155 from './abi/erc1155';
 import * as erc20 from './abi/erc20';
 import { Blockchain, ContractType } from './model';
-import { CONTRACTS_TO_INDEX } from './utils/constants';
-import { INDEX_CONFIG } from './utils/constants';
+import { CONTRACTS_TO_INDEX, INDEX_CONFIG } from './utils/constants';
 export const BLOCKCHAIN = Blockchain.ETH;
 
 export const processor = new EvmBatchProcessor()

@@ -24,7 +24,7 @@ FROM node AS squid
 WORKDIR /mnt/disk/squid/indexer
 
 # Global installation and file movements requiring root privileges
-RUN npm i -g @subsquid/commands --ignore-scripts && mv $(which squid-commands) /usr/local/bin/sqd
+RUN npm i --ignore-scripts -g @subsquid/commands && mv $(which squid-commands) /usr/local/bin/sqd
 
 # Create a non-root user and switch to it, ensuring the directory is owned by nonroot
 RUN addgroup -S nonroot && adduser -S nonroot -G nonroot \
