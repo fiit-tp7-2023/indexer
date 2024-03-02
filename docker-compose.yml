@@ -1,41 +1,11 @@
+version: "3"
+
 services:
   db:
     image: postgres:15
-    expose:
-      - "5433"
-    ports:
-      - "5433:5432"
     env_file:
       - .env
-    networks:
-      - team07
-    command: -p 5433
-  api:
-    image: indexer
     ports:
-      # GraphQL endpoint at port 4350
-      - "4350:4350"
-    env_file:
-      - .env
-    command: ["sqd", "serve:prod"]
-    depends_on:
-      - db
-    networks:
-      - team07
-  processor:
-    image: indexer
-    ports:
-      - "3001:3000"
-    env_file:
-      - .env
-    command: ["sqd", "process:prod"]
-    depends_on:
-      - db
-    networks:
-      - team07
+      - "${DB_PORT}:5432"
+    shm_size: 1gb
 
-
-networks:
-  team07:
-    name: team07
-    external: true
