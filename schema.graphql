@@ -69,6 +69,13 @@ type NftEntity @entity {
   transfers: [NftTransferEntity] @derivedFrom(field: "nft")
 }
 
+type NftOwnerEntity @entity {
+  id: ID!
+  owner: AccountEntity! @index
+  amount: BigInt!
+  nft: NftEntity!
+}
+
 type NftTransferEntity @entity {
   id: ID!
   nft: NftEntity!
