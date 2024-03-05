@@ -1,7 +1,7 @@
 import { Blockchain, ContractType } from '../model';
 import { IndexContract, MulticallContract } from './interfaces';
 
-export const ZERO_ADDRESS = 0x0000000000000000000000000000000000000000;
+export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
 export const INDEX_CONFIG = {
   ETH: {

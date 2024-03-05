@@ -28,10 +28,10 @@ export class TransferService {
       const nftId = this.nftService.getNftId(event.contractAddress, event.blockchain, event.tokenId);
       const fromOwnerKey = this.getNftOwnerId(event.from, nftId);
       const toOwnerKey = this.getNftOwnerId(event.to, nftId);
-      if (!nftOwners.has(fromOwnerKey)) {
+      if (!nftOwners.has(fromOwnerKey) && event.from !== ZERO_ADDRESS) {
         nftOwners.set(fromOwnerKey, { id: fromOwnerKey, ownerId: event.from, nftId });
       }
-      if (!nftOwners.has(toOwnerKey)) {
+      if (!nftOwners.has(toOwnerKey) && event.to !== ZERO_ADDRESS) {
         nftOwners.set(toOwnerKey, { id: toOwnerKey, ownerId: event.to, nftId });
       }
     });
@@ -91,7 +91,7 @@ export class TransferService {
     const nftOwners = await this.getNftOwnersInTransferEvents(nftsTransfers);
     const { notFound } = await this.nftOwnerStorage.loadEntitiesFromStorage(new Set(nftOwners.keys()));
     for (const [nftOwnerId, owner] of nftOwners) {
-      if (notFound.has(nftOwnerId)) {
+      if (notFound.has(nftOwnerId) && owner.ownerId !== ZERO_ADDRESS) {
         const nftOwnerEntity = new NftOwnerEntity({
           id: nftOwnerId,
           nft: await this.nftService.nftStorage.getOrFail(owner.nftId),
