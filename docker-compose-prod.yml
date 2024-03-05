@@ -6,12 +6,18 @@ services:
     expose:
       - "${DB_PORT}"
     ports:
-      - "${DB_PORT}:5432"
+      - "23798:5432"
     env_file:
       - .env
+    volumes:
+      - "../pg-data:/var/lib/postgresql/data"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d squid -U postgres"]
+      interval: 5s
+      timeout: 30s
+      retries: 5
     networks:
       - team07
-    command: -p ${DB_PORT}
   api:
     image: indexer
     ports:
@@ -21,7 +27,8 @@ services:
       - .env
     command: ["sqd", "serve:prod"]
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - team07
   processor:
@@ -32,7 +39,8 @@ services:
       - .env
     command: ["sqd", "process:prod"]
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - team07
 
