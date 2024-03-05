@@ -4,11 +4,11 @@ import { IndexContract, MulticallContract } from './interfaces';
 export const ZERO_ADDRESS = 0x0000000000000000000000000000000000000000;
 
 export const INDEX_CONFIG = {
-	ETH: {
-		block_range: { from: 4528859 },
-		finality_confirmation: 10,
-	}
-}
+  ETH: {
+    block_range: { from: 11930426 },
+    finality_confirmation: 10,
+  },
+};
 
 export const CONTRACTS_TO_INDEX: IndexContract[] = [
   {
@@ -29,12 +29,12 @@ export const CONTRACTS_TO_INDEX: IndexContract[] = [
     blockchain: Blockchain.ETH,
     name: 'Parallel Alpha',
   },
-  {
-    address: '0xdAC17F958D2ee523a2206206994597C13D831ec7'.toLowerCase(), //463474
-    type: ContractType.ERC20,
-    blockchain: Blockchain.ETH,
-    name: 'USDT',
-  },
+  // {
+  //   address: '0xdAC17F958D2ee523a2206206994597C13D831ec7'.toLowerCase(), // 463474
+  //   type: ContractType.ERC20,
+  //   blockchain: Blockchain.ETH,
+  //   name: 'USDT',
+  // },
 ];
 
 export const MULTICALL_CONTRACTS_BY_BLOCKCHAIN: Map<string, MulticallContract> = new Map([
