@@ -45,7 +45,7 @@ export class TokenService {
 
     await this.createTokenCollections(notFoundTokenCollections);
     await this.loadNewTokensMetadata();
-    await this.tokenCollectionStorage.commit();
+    await this.tokenCollectionStorage.commitNew();
   }
 
   public async loadNewTokensMetadata(): Promise<void> {

@@ -54,8 +54,8 @@ export class NftService {
     await this.createNfts(notFoundNfts);
     await this.loadMetadataForNewCollections();
     await this.loadMetadataForNewNfts();
-    await this.nftCollectionStorage.commit();
-    await this.nftStorage.commit();
+    await this.nftCollectionStorage.commitNew();
+    await this.nftStorage.commitNew();
   }
 
   public async getCollectionsInNfts(nfts: NftData[]): Promise<Map<string, CollectionData>> {

@@ -41,7 +41,11 @@ export class EntityRepository<T extends Entity> {
     return entity;
   }
 
-  async commit(): Promise<void> {
+  async commitNew(): Promise<void> {
     await this.ctx.store.insert([...this.newEntities.values()]);
+  }
+
+  async commit(): Promise<void> {
+    await this.ctx.store.upsert([...this.existingEntities.values(), ...this.newEntities.values()]);
   }
 }
