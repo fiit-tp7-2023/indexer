@@ -5,7 +5,7 @@ import { TransferEvent, NftOwnerData } from '../utils/interfaces';
 import { AccountService } from './AccountService';
 import { NftService } from './NftService';
 import { TokenService } from './TokenService';
-import { filterNotFound } from '../utils/helpers';
+import { ZERO_ADDRESS } from '../utils/constants';
 
 export class TransferService {
   nftOwnerStorage: EntityRepository<NftOwnerEntity>;
@@ -18,12 +18,22 @@ export class TransferService {
     this.nftOwnerStorage = new EntityRepository(this.ctx, NftOwnerEntity);
   }
 
-  async getNftOwnersInTransferEvents(events: TransferEvent[]): Promise<Set<string>> {
-    const nftOwners = new Set<string>();
+  private getNftOwnerId(ownerId: string, nftId: string): string {
+    return `${ownerId}_${nftId}`;
+  }
+
+  async getNftOwnersInTransferEvents(events: TransferEvent[]): Promise<Map<string, NftOwnerData>> {
+    const nftOwners = new Map<string, NftOwnerData>();
     events.forEach((event) => {
       const nftId = this.nftService.getNftId(event.contractAddress, event.blockchain, event.tokenId);
-      nftOwners.add(`${event.from}_${nftId}`);
-      nftOwners.add(`${event.to}_${nftId}`);
+      const fromOwnerKey = this.getNftOwnerId(event.from, nftId);
+      const toOwnerKey = this.getNftOwnerId(event.to, nftId);
+      if (!nftOwners.has(fromOwnerKey)) {
+        nftOwners.set(fromOwnerKey, { id: fromOwnerKey, ownerId: event.from, nftId });
+      }
+      if (!nftOwners.has(toOwnerKey)) {
+        nftOwners.set(toOwnerKey, { id: toOwnerKey, ownerId: event.to, nftId });
+      }
     });
     return nftOwners;
   }
@@ -59,8 +69,8 @@ export class TransferService {
   }
 
   private async updateNftOwners(nftId: string, transfer: TransferEvent): Promise<void> {
-    const fromOwnerKey = `${nftId}_${transfer.from}`;
-    const toOwnerKey = `${nftId}_${transfer.to}`;
+    const fromOwnerKey = this.getNftOwnerId(transfer.from, nftId);
+    const toOwnerKey = this.getNftOwnerId(transfer.to, nftId);
 
     const [fromOwner, toOwner] = await Promise.all([
       this.nftOwnerStorage.get(fromOwnerKey),
@@ -79,13 +89,13 @@ export class TransferService {
 
   async loadNftOwners(nftsTransfers: TransferEvent[]): Promise<void> {
     const nftOwners = await this.getNftOwnersInTransferEvents(nftsTransfers);
-    const { notFound } = await this.nftOwnerStorage.loadEntitiesFromStorage(nftOwners);
-    for (const nftOwnerId of nftOwners) {
+    const { notFound } = await this.nftOwnerStorage.loadEntitiesFromStorage(new Set(nftOwners.keys()));
+    for (const [nftOwnerId, owner] of nftOwners) {
       if (notFound.has(nftOwnerId)) {
         const nftOwnerEntity = new NftOwnerEntity({
           id: nftOwnerId,
-          nft: await this.nftService.nftStorage.getOrFail(nftOwnerId.split('_', 1)[1]),
-          owner: await this.accountService.accountStorage.getOrFail(nftOwnerId.split('_', 1)[0]),
+          nft: await this.nftService.nftStorage.getOrFail(owner.nftId),
+          owner: await this.accountService.accountStorage.getOrFail(owner.ownerId),
           amount: BigInt(0),
         });
         await this.nftOwnerStorage.createNewEntity(nftOwnerEntity);
