@@ -8,7 +8,7 @@ import * as erc721 from '../abi/erc721';
 import * as erc1155 from '../abi/erc1155';
 import { loadNftCollectionsMetadata, loadNftsMetadata } from '../utils/metadata';
 import { EntityRepository } from '../repositories/EntityRepository';
-import { filterNotFound } from '../utils/helpers';
+import { filterNotFound, tryAggregate } from '../utils/helpers';
 
 export class NftService {
   nftStorage: EntityRepository<NftEntity>;
@@ -126,21 +126,22 @@ export class NftService {
   }
 
   private async loadCollectionUris(collections: NftCollectionEntity[]): Promise<undefined> {
-    const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(this.blockService.blockchain);
-    if (!multicall) {
-      this.ctx.log.error(`Multicall contract for ${this.blockService.blockchain} not defined`);
-      return;
-    }
     const calls = collections.map((collection) => [collection.address, []] as [string, any[]]);
     const latestBlockNumber = await this.blockService.getLatestBlockNumber();
-    const multicallContract = new Multicall(this.ctx, { height: latestBlockNumber }, multicall.address);
-
-    const contractUriResults = await multicallContract.tryAggregate(
+    const contractUriResults = await tryAggregate(
+      this.ctx,
+      this.blockService.blockchain,
+      latestBlockNumber,
       erc721.functions.contractURI,
       calls,
-      multicall.batchSize,
     );
-    const baseUriResults = await multicallContract.tryAggregate(erc721.functions.baseURI, calls, multicall.batchSize);
+    const baseUriResults = await tryAggregate(
+      this.ctx,
+      this.blockService.blockchain,
+      latestBlockNumber,
+      erc721.functions.baseURI,
+      calls,
+    );
 
     for (let i = 0; i < contractUriResults.length; i++) {
       if (contractUriResults[i].success) collections[i].uri = contractUriResults[i].value;
@@ -159,16 +160,21 @@ export class NftService {
 
   private async loadCollectionData(collections: NftCollectionEntity[]): Promise<undefined> {
     const latestBlockNumber = await this.blockService.getLatestBlockNumber();
-    const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(this.blockService.blockchain);
-    if (!multicall) {
-      this.ctx.log.error(`Multicall contract for ${this.blockService.blockchain} not defined`);
-      return;
-    }
     const calls = collections.map((collection) => [collection.address, []] as [string, any[]]);
-
-    const multicallContract = new Multicall(this.ctx, { height: latestBlockNumber }, multicall.address);
-    const nameResults = await multicallContract.tryAggregate(erc721.functions.name, calls, multicall.batchSize);
-    const symbolResults = await multicallContract.tryAggregate(erc721.functions.symbol, calls, multicall.batchSize);
+    const nameResults = await tryAggregate(
+      this.ctx,
+      this.blockService.blockchain,
+      latestBlockNumber,
+      erc721.functions.name,
+      calls,
+    );
+    const symbolResults = await tryAggregate(
+      this.ctx,
+      this.blockService.blockchain,
+      latestBlockNumber,
+      erc721.functions.symbol,
+      calls,
+    );
     for (let i = 0; i < nameResults.length; i++) {
       if (nameResults[i].success) collections[i].name = nameResults[i].value;
       if (symbolResults[i].success) collections[i].symbol = symbolResults[i].value;
@@ -193,12 +199,23 @@ export class NftService {
       const nfts = tokensToFetchUri.filter((token) => token.nftCollection.contractType == contractType);
       if (!nfts.length) continue;
       const calls = nfts.map((token) => [token.nftCollection.address, [token.tokenId]] as [string, any[]]);
-      const multicallContract = new Multicall(ctx, { height: latestBlockNumber }, multicall.address);
       let results;
       if (contractType == ContractType.ERC721) {
-        results = await multicallContract.tryAggregate(erc721.functions.tokenURI, calls, multicall.batchSize);
+        results = await tryAggregate(
+          ctx,
+          this.blockService.blockchain,
+          latestBlockNumber,
+          erc721.functions.tokenURI,
+          calls,
+        );
       } else {
-        results = await multicallContract.tryAggregate(erc1155.functions.uri, calls, multicall.batchSize);
+        results = await tryAggregate(
+          ctx,
+          this.blockService.blockchain,
+          latestBlockNumber,
+          erc1155.functions.uri,
+          calls,
+        );
       }
       results.forEach((res, i) => {
         if (res.success) {

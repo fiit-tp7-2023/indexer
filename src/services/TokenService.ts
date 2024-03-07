@@ -6,7 +6,7 @@ import { MULTICALL_CONTRACTS_BY_BLOCKCHAIN } from '../utils/constants';
 import { CollectionData, TransferEvent } from '../utils/interfaces';
 import { BlockService } from './BlockService';
 import * as erc20 from '../abi/erc20';
-import { filterNotFound } from '../utils/helpers';
+import { filterNotFound, tryAggregate } from '../utils/helpers';
 
 export class TokenService {
   tokenCollectionStorage: EntityRepository<TokenCollectionEntity>;
@@ -50,18 +50,29 @@ export class TokenService {
 
   public async loadNewTokensMetadata(): Promise<void> {
     const collections = [...this.tokenCollectionStorage.newEntities.values()];
-    const multicall = MULTICALL_CONTRACTS_BY_BLOCKCHAIN.get(this.blockService.blockchain);
-    if (!multicall) {
-      this.ctx.log.error(`Multicall contract for ${this.blockService.blockchain} not defined`);
-      return;
-    }
     const calls = collections.map((collection) => [collection.address, []] as [string, any[]]);
     const latestBlockNumber = await this.blockService.getLatestBlockNumber();
-    const multicallContract = new Multicall(this.ctx, { height: latestBlockNumber }, multicall.address);
-    const nameResults = await multicallContract.tryAggregate(erc20.functions.name, calls, multicall.batchSize);
-    const symbolResults = await multicallContract.tryAggregate(erc20.functions.symbol, calls, multicall.batchSize);
-    const decimalsResults = await multicallContract.tryAggregate(erc20.functions.decimals, calls, multicall.batchSize);
-
+    const nameResults = await tryAggregate(
+      this.ctx,
+      this.blockService.blockchain,
+      latestBlockNumber,
+      erc20.functions.name,
+      calls,
+    );
+    const symbolResults = await tryAggregate(
+      this.ctx,
+      this.blockService.blockchain,
+      latestBlockNumber,
+      erc20.functions.symbol,
+      calls,
+    );
+    const decimalsResults = await tryAggregate(
+      this.ctx,
+      this.blockService.blockchain,
+      latestBlockNumber,
+      erc20.functions.decimals,
+      calls,
+    );
     for (let i = 0; i < nameResults.length; i++) {
       if (nameResults[i].success) collections[i].name = nameResults[i].value;
       if (symbolResults[i].success) collections[i].symbol = symbolResults[i].value;
