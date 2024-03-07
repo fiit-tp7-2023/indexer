@@ -1,8 +1,6 @@
-import { Multicall } from '../abi/multicall';
 import { TokenCollectionEntity } from '../model';
 import { Context } from '../processor';
 import { EntityRepository } from '../repositories/EntityRepository';
-import { MULTICALL_CONTRACTS_BY_BLOCKCHAIN } from '../utils/constants';
 import { CollectionData, TransferEvent } from '../utils/interfaces';
 import { BlockService } from './BlockService';
 import * as erc20 from '../abi/erc20';

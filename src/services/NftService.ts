@@ -2,7 +2,6 @@ import { ContractType, NftCollectionEntity, NftEntity } from '../model';
 import { Context } from '../processor';
 import { CollectionData, NftData, TransferEvent } from '../utils/interfaces';
 import { BlockService } from './BlockService';
-import { Multicall } from '../abi/multicall';
 import { MULTICALL_CONTRACTS_BY_BLOCKCHAIN } from '../utils/constants';
 import * as erc721 from '../abi/erc721';
 import * as erc1155 from '../abi/erc1155';
