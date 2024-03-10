@@ -20,6 +20,12 @@ export interface TransferEvent {
   contractType: ContractType;
 }
 
+export interface NftOwnerData {
+  id: string;
+  ownerId: string;
+  nftId: string;
+}
+
 export interface CollectionData {
   id: string;
   contractAddress: string;
