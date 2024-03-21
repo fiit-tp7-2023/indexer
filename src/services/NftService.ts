@@ -53,8 +53,8 @@ export class NftService {
     await this.createNfts(notFoundNfts);
     await this.loadMetadataForNewCollections();
     await this.loadMetadataForNewNfts();
-    await this.nftCollectionStorage.commitNew();
-    await this.nftStorage.commitNew();
+    await this.nftCollectionStorage.commit();
+    await this.nftStorage.commit();
   }
 
   public async getCollectionsInNfts(nfts: NftData[]): Promise<Map<string, CollectionData>> {
@@ -92,7 +92,7 @@ export class NftService {
           this.getNftCollectionId(nft.contractAddress, nft.blockchain),
         ),
       });
-      await this.nftStorage.createNewEntity(nftEntity);
+      await this.nftStorage.set(nftEntity);
     }
   }
 
@@ -105,7 +105,7 @@ export class NftService {
         contractType: collectionData.contractType,
         createdAtBlock: collectionData.createdAtBlock,
       });
-      this.nftCollectionStorage.createNewEntity(nftCollenctionEntity);
+      this.nftCollectionStorage.set(nftCollenctionEntity);
     }
   }
 

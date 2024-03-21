@@ -43,7 +43,7 @@ export class TokenService {
 
     await this.createTokenCollections(notFoundTokenCollections);
     await this.loadNewTokensMetadata();
-    await this.tokenCollectionStorage.commitNew();
+    await this.tokenCollectionStorage.commit();
   }
 
   public async loadNewTokensMetadata(): Promise<void> {
@@ -87,7 +87,7 @@ export class TokenService {
         contractType: collectionData.contractType,
         createdAtBlock: collectionData.createdAtBlock,
       });
-      await this.tokenCollectionStorage.createNewEntity(tokenCollectionEntity);
+      await this.tokenCollectionStorage.set(tokenCollectionEntity);
     }
   }
 }
