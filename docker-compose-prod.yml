@@ -34,7 +34,7 @@ services:
   processor:
     image: indexer
     ports:
-      - "3001:3000"
+      - "3100:3000"
     env_file:
       - .env
     command: ["sqd", "process:prod"]
