@@ -72,9 +72,9 @@ export class TokenService {
       calls,
     );
     for (let i = 0; i < nameResults.length; i++) {
-      if (nameResults[i].success) collections[i].name = nameResults[i].value;
-      if (symbolResults[i].success) collections[i].symbol = symbolResults[i].value;
-      if (decimalsResults[i].success) collections[i].decimals = decimalsResults[i].value;
+      if (nameResults[i] && nameResults[i].success) collections[i].name = nameResults[i].value;
+      if (symbolResults[i] && symbolResults[i].success) collections[i].symbol = symbolResults[i].value;
+      if (decimalsResults[i] && decimalsResults[i].success) collections[i].decimals = decimalsResults[i].value;
     }
   }
 
