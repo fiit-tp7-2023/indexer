@@ -1,5 +1,4 @@
 import { BLOCKCHAIN, Context, Log } from '../processor';
-import { CONTRACTS_TO_INDEX } from '../utils/constants';
 import { TransferEvent } from '../utils/interfaces';
 import * as erc1155 from '../abi/erc1155';
 import * as erc20 from '../abi/erc20';
@@ -23,9 +22,6 @@ export class BlockService {
 
     for (let block of this.ctx.blocks) {
       for (let log of block.logs) {
-        if (!CONTRACTS_TO_INDEX.some((contract) => contract.address === log.address)) {
-          continue;
-        }
         switch (log.topics[0]) {
           case erc721.events.Transfer.topic:
             if (log.topics.length === 4) {
