@@ -49,30 +49,38 @@ export class BlockService {
   }
 
   private handleTransferEvent(log: Log, contractType: ContractType) {
-    switch (contractType) {
-      case ContractType.ERC20: {
-        const { from, to, value } = erc20.events.Transfer.decode(log);
-        this.addTransferEvent(log, from, to, BigInt(0), value, ContractType.ERC20);
-        break;
+    try {
+      switch (contractType) {
+        case ContractType.ERC20: {
+          const { from, to, value } = erc20.events.Transfer.decode(log);
+          this.addTransferEvent(log, from, to, BigInt(0), value, ContractType.ERC20);
+          break;
+        }
+        case ContractType.ERC721: {
+          const { from, to, tokenId } = erc721.events.Transfer.decode(log);
+          this.addTransferEvent(log, from, to, tokenId, BigInt(1), ContractType.ERC721);
+          break;
+        }
+        case ContractType.ERC1155: {
+          const { from, to, id, value } = erc1155.events.TransferSingle.decode(log);
+          this.addTransferEvent(log, from, to, id, value, ContractType.ERC1155);
+          break;
+        }
       }
-      case ContractType.ERC721: {
-        const { from, to, tokenId } = erc721.events.Transfer.decode(log);
-        this.addTransferEvent(log, from, to, tokenId, BigInt(1), ContractType.ERC721);
-        break;
-      }
-      case ContractType.ERC1155: {
-        const { from, to, id, value } = erc1155.events.TransferSingle.decode(log);
-        this.addTransferEvent(log, from, to, id, value, ContractType.ERC1155);
-        break;
-      }
+    } catch (error: any) {
+      this.ctx.log.error(`Error decoding transfer event: ${error.message}`);
     }
   }
 
   private handleERC1155BatchTransfer(log: Log) {
-    const { from, to, ids, amounts } = erc1155.events.TransferBatch.decode(log);
-    ids.forEach((id, index) => {
-      this.addTransferEvent(log, from, to, id, amounts[index], ContractType.ERC1155);
-    });
+    try {
+      const { from, to, ids, amounts } = erc1155.events.TransferBatch.decode(log);
+      ids.forEach((id, index) => {
+        this.addTransferEvent(log, from, to, id, amounts[index], ContractType.ERC1155);
+      });
+    } catch (error: any) {
+      this.ctx.log.error(`Error decoding ERC1155 batch transfer event: ${error.message}`);
+    }
   }
 
   private addTransferEvent(
