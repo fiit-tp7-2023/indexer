@@ -1,5 +1,5 @@
 import { BLOCKCHAIN, Context, Log } from '../processor';
-import { TransferEvent } from '../utils/interfaces';
+import { IndexChainConfig, TransferEvent } from '../utils/interfaces';
 import * as erc1155 from '../abi/erc1155';
 import * as erc20 from '../abi/erc20';
 import * as erc721 from '../abi/erc721';
@@ -11,7 +11,7 @@ export class BlockService {
   nftsTransfers: TransferEvent[] = [];
   tokenTransfers: TransferEvent[] = [];
   latestBlockNumber: number = 0;
-  config: any;
+  config: IndexChainConfig;
   constructor(
     private ctx: Context,
     public blockchain: string,
