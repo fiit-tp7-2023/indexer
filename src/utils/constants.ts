@@ -1,5 +1,5 @@
 import { Blockchain, ContractType } from '../model';
-import { IndexContract, MulticallContract } from './interfaces';
+import { MulticallContract } from './interfaces';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
