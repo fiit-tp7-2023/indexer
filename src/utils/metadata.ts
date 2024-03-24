@@ -13,6 +13,7 @@ export const IPFS_GATEWAYS = [
 import { NftEntity, NftCollectionEntity } from '../model';
 import { ContractMetadata, TokenMetadata, UrisBySource, ipfsUri } from './interfaces';
 import { splitIntoBatches } from './helpers';
+import { sanitizeString } from './helpers';
 
 const api = Axios.create({
   headers: {
@@ -181,11 +182,11 @@ export async function loadNftsMetadata(ctx: Context, nfts: NftEntity[], batchSiz
 
 function get_image_uri(metadata: any): string | undefined {
   if (typeof metadata?.image === 'string') {
-    return metadata.image;
+    return sanitizeString(metadata.image);
   } else if (typeof metadata?.thumbnailUri === 'string') {
-    return metadata.thumbnailUri;
+    return sanitizeString(metadata.thumbnailUri);
   } else if (typeof metadata?.mediaUri === 'string') {
-    return metadata.mediaUri;
+    return sanitizeString(metadata.mediaUri);
   } else {
     return undefined;
   }
@@ -193,20 +194,22 @@ function get_image_uri(metadata: any): string | undefined {
 
 export async function mapCollectionMetadata(rawMetadata: any): Promise<ContractMetadata> {
   return {
-    name: typeof rawMetadata?.name === 'string' ? rawMetadata.name : undefined,
-    description: typeof rawMetadata?.description === 'string' ? rawMetadata.description : undefined,
+    name: typeof rawMetadata?.name === 'string' ? sanitizeString(rawMetadata.name) : undefined,
+    description: typeof rawMetadata?.description === 'string' ? sanitizeString(rawMetadata.description) : undefined,
     image: get_image_uri(rawMetadata),
-    externalLink: typeof rawMetadata?.external_link === 'string' ? rawMetadata.external_link : undefined,
+    externalLink:
+      typeof rawMetadata?.external_link === 'string' ? sanitizeString(rawMetadata.external_link) : undefined,
   };
 }
 
 export async function mapTokenMetadata(rawMetadata: any): Promise<TokenMetadata> {
   return {
-    name: typeof rawMetadata?.name === 'string' ? rawMetadata.name : undefined,
-    description: typeof rawMetadata?.description === 'string' ? rawMetadata.description : undefined,
+    name: typeof rawMetadata?.name === 'string' ? sanitizeString(rawMetadata.name) : undefined,
+    description: typeof rawMetadata?.description === 'string' ? sanitizeString(rawMetadata.description) : undefined,
     image: get_image_uri(rawMetadata),
-    externalUrl: typeof rawMetadata?.external_url === 'string' ? rawMetadata.external_url : undefined,
-    animationUrl: typeof rawMetadata?.animation_url === 'string' ? rawMetadata.animation_url : undefined,
+    externalUrl: typeof rawMetadata?.external_url === 'string' ? sanitizeString(rawMetadata.external_url) : undefined,
+    animationUrl:
+      typeof rawMetadata?.animation_url === 'string' ? sanitizeString(rawMetadata.animation_url) : undefined,
     attributes:
       typeof rawMetadata?.attributes === 'object' && rawMetadata.attributes !== null
         ? rawMetadata.attributes

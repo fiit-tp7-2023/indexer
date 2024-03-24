@@ -5,6 +5,7 @@ import { CollectionData, TransferEvent } from '../utils/interfaces';
 import { BlockService } from './BlockService';
 import * as erc20 from '../abi/erc20';
 import { filterNotFound, tryAggregate } from '../utils/helpers';
+import { sanitizeString } from '../utils/helpers';
 
 export class TokenService {
   tokenCollectionStorage: EntityRepository<TokenCollectionEntity>;
@@ -72,8 +73,8 @@ export class TokenService {
       calls,
     );
     for (let i = 0; i < nameResults.length; i++) {
-      if (nameResults[i] && nameResults[i].success) collections[i].name = nameResults[i].value;
-      if (symbolResults[i] && symbolResults[i].success) collections[i].symbol = symbolResults[i].value;
+      if (nameResults[i] && nameResults[i].success) collections[i].name = sanitizeString(nameResults[i].value);
+      if (symbolResults[i] && symbolResults[i].success) collections[i].symbol = sanitizeString(symbolResults[i].value);
       if (decimalsResults[i] && decimalsResults[i].success) collections[i].decimals = decimalsResults[i].value;
     }
   }
