@@ -5,15 +5,19 @@ import * as erc20 from '../abi/erc20';
 import * as erc721 from '../abi/erc721';
 import { v4 as uuidv4 } from 'uuid';
 import { ContractType } from '../model';
+import { INDEX_CONFIG } from '../utils/constants';
 
 export class BlockService {
   nftsTransfers: TransferEvent[] = [];
   tokenTransfers: TransferEvent[] = [];
   latestBlockNumber: number = 0;
+  config: any;
   constructor(
     private ctx: Context,
     public blockchain: string,
-  ) {}
+  ) {
+    this.config = INDEX_CONFIG[blockchain as keyof typeof INDEX_CONFIG];
+  }
 
   async processBatchOfBlocks(): Promise<{ nftsTransfers: TransferEvent[]; tokensTransfers: TransferEvent[] }> {
     this.nftsTransfers = [];
@@ -24,17 +28,17 @@ export class BlockService {
       for (let log of block.logs) {
         switch (log.topics[0]) {
           case erc721.events.Transfer.topic:
-            if (log.topics.length === 4) {
+            if (log.topics.length === 4 && !this.isLogFiltered(log, ContractType.ERC721)) {
               this.handleTransferEvent(log, ContractType.ERC721);
-            } else if (log.topics.length === 3) {
+            } else if (log.topics.length === 3 && !this.isLogFiltered(log, ContractType.ERC20)) {
               this.handleTransferEvent(log, ContractType.ERC20);
             }
             break;
           case erc1155.events.TransferSingle.topic:
-            this.handleTransferEvent(log, ContractType.ERC1155);
+            if (!this.isLogFiltered(log, ContractType.ERC1155)) this.handleTransferEvent(log, ContractType.ERC1155);
             break;
           case erc1155.events.TransferBatch.topic:
-            this.handleERC1155BatchTransfer(log);
+            if (!this.isLogFiltered(log, ContractType.ERC1155)) this.handleERC1155BatchTransfer(log);
             break;
         }
       }
@@ -70,6 +74,16 @@ export class BlockService {
     } catch (error: any) {
       this.ctx.log.error(`Error decoding transfer event: ${error.message}`);
     }
+  }
+
+  private isLogFiltered(log: Log, contractType: ContractType): boolean {
+    if (this.config[`filter_${contractType}`]) {
+      return !this.config.contract_filter
+        .filter((contract: any) => contract.type === contractType)
+        .map((contract: any) => contract.address)
+        .includes(log.address);
+    }
+    return false;
   }
 
   private handleERC1155BatchTransfer(log: Log) {

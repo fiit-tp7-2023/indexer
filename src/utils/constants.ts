@@ -38,8 +38,6 @@ export const INDEX_CONFIG = {
   },
 };
 
-export const FILTERED_CONTRACTS: IndexContract[] = [];
-
 export const MULTICALL_CONTRACTS_BY_BLOCKCHAIN: Map<string, MulticallContract> = new Map([
   [
     Blockchain.ETH,
