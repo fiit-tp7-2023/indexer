@@ -95,3 +95,15 @@ export interface IndexChainConfig {
   filter_ERC1155: boolean;
   contract_filter: ContractFilter[];
 }
+
+export interface RawMetadata {
+  name?: string;
+  description?: string;
+  image?: string;
+  thumbnailUri?: string;
+  mediaUri?: string;
+  external_link?: string;
+  external_url?: string;
+  animation_url?: string;
+  attributes?: JSON;
+}

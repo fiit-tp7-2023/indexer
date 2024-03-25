@@ -11,7 +11,7 @@ export const IPFS_GATEWAYS = [
   'https://kodadot1.infura-ipfs.io',
 ];
 import { NftEntity, NftCollectionEntity } from '../model';
-import { ContractMetadata, TokenMetadata, UrisBySource, ipfsUri } from './interfaces';
+import { ContractMetadata, RawMetadata, TokenMetadata, UrisBySource, ipfsUri } from './interfaces';
 import { splitIntoBatches } from './helpers';
 import { sanitizeString } from './helpers';
 
@@ -58,7 +58,7 @@ export function isIpfsUrl(url: string): boolean {
   return ipfsPattern.test(url);
 }
 
-export async function splitUrisBySource(uris: string[]): Promise<UrisBySource> {
+export async function splitUrisBySource(ctx: Context, uris: string[]): Promise<UrisBySource> {
   let separatedUris: UrisBySource = { ipfsUris: [], nonIpfsUris: new Map() };
   let ipfsGatewayIndex = 0;
   for (const uri of uris) {
@@ -69,17 +69,21 @@ export async function splitUrisBySource(uris: string[]): Promise<UrisBySource> {
       });
       ipfsGatewayIndex++;
     } else {
-      const origin = new URL(uri).origin;
-      const sameOriginUris = separatedUris.nonIpfsUris.get(origin) ?? [];
-      sameOriginUris.push(uri);
-      separatedUris.nonIpfsUris.set(origin, sameOriginUris);
+      try {
+        const origin = new URL(uri).origin;
+        const sameOriginUris = separatedUris.nonIpfsUris.get(origin) ?? [];
+        sameOriginUris.push(uri);
+        separatedUris.nonIpfsUris.set(origin, sameOriginUris);
+      } catch (error) {
+        ctx.log.warn(`Failed to parse origin from URI: ${uri}`);
+      }
     }
   }
   return separatedUris;
 }
 
 export async function fetchAllMetadata(ctx: Context, uris: string[]): Promise<Map<string, JSON>> {
-  const separatedUris = await splitUrisBySource(uris);
+  const separatedUris = await splitUrisBySource(ctx, uris);
   const ipfsMetadata = await fetchIpfsMetadata(ctx, separatedUris.ipfsUris);
   const nonIpfsMetadata = await fetchNonIpfsMetadata(ctx, separatedUris.nonIpfsUris);
   return new Map([...ipfsMetadata.entries(), ...nonIpfsMetadata.entries()]);
@@ -161,7 +165,11 @@ export async function loadNftCollectionsMetadata(ctx: Context, collections: NftC
   const filledMetadata = await fetchAllMetadata(ctx, collectionsWithUri);
   for (const collection of collections) {
     if (collection.uri) {
-      Object.assign(collection, await mapCollectionMetadata(filledMetadata.get(collection.uri)));
+      const rawJson = filledMetadata.get(collection.uri);
+      if (rawJson) {
+        const rawMetadata: RawMetadata = JSON.parse(JSON.stringify(rawJson));
+        Object.assign(collection, await mapCollectionMetadata(rawMetadata));
+      }
     }
   }
 }
@@ -173,14 +181,18 @@ export async function loadNftsMetadata(ctx: Context, nfts: NftEntity[], batchSiz
     const filledMetadata = await fetchAllMetadata(ctx, tokensWithUri);
     for (const nft of batch) {
       if (nft.uri) {
-        Object.assign(nft, await mapTokenMetadata(filledMetadata.get(nft.uri)));
+        const rawJson = filledMetadata.get(nft.uri);
+        if (rawJson) {
+          const rawMetadata: RawMetadata = JSON.parse(JSON.stringify(rawJson));
+          Object.assign(nft, await mapTokenMetadata(rawMetadata));
+        }
       }
     }
     await new Promise((f) => setTimeout(f, sleep));
   }
 }
 
-function get_image_uri(metadata: any): string | undefined {
+function get_image_uri(metadata: RawMetadata): string | undefined {
   if (typeof metadata?.image === 'string') {
     return sanitizeString(metadata.image);
   } else if (typeof metadata?.thumbnailUri === 'string') {
@@ -192,7 +204,7 @@ function get_image_uri(metadata: any): string | undefined {
   }
 }
 
-export async function mapCollectionMetadata(rawMetadata: any): Promise<ContractMetadata> {
+export async function mapCollectionMetadata(rawMetadata: RawMetadata): Promise<ContractMetadata> {
   return {
     name: typeof rawMetadata?.name === 'string' ? sanitizeString(rawMetadata.name) : undefined,
     description: typeof rawMetadata?.description === 'string' ? sanitizeString(rawMetadata.description) : undefined,
@@ -202,7 +214,7 @@ export async function mapCollectionMetadata(rawMetadata: any): Promise<ContractM
   };
 }
 
-export async function mapTokenMetadata(rawMetadata: any): Promise<TokenMetadata> {
+export async function mapTokenMetadata(rawMetadata: RawMetadata): Promise<TokenMetadata> {
   return {
     name: typeof rawMetadata?.name === 'string' ? sanitizeString(rawMetadata.name) : undefined,
     description: typeof rawMetadata?.description === 'string' ? sanitizeString(rawMetadata.description) : undefined,

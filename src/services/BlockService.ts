@@ -1,5 +1,5 @@
 import { BLOCKCHAIN, Context, Log } from '../processor';
-import { IndexChainConfig, TransferEvent } from '../utils/interfaces';
+import { ContractFilter, IndexChainConfig, TransferEvent } from '../utils/interfaces';
 import * as erc1155 from '../abi/erc1155';
 import * as erc20 from '../abi/erc20';
 import * as erc721 from '../abi/erc721';
@@ -79,8 +79,8 @@ export class BlockService {
   private isLogFiltered(log: Log, contractType: ContractType): boolean {
     if (this.config[`filter_${contractType}`]) {
       return !this.config.contract_filter
-        .filter((contract: any) => contract.type === contractType)
-        .map((contract: any) => contract.address)
+        .filter((contract: ContractFilter) => contract.type === contractType)
+        .map((contract: ContractFilter) => contract.address)
         .includes(log.address);
     }
     return false;
