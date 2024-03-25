@@ -28,12 +28,12 @@ export class AccountService {
     const { notFound } = await this.accountStorage.loadEntitiesFromStorage(new Set(accounts.keys()));
     const notFoundAccounts: AccountData[] = filterNotFound<AccountData>(accounts, notFound);
     await this.createAccounts(notFoundAccounts);
-    await this.accountStorage.commitNew();
+    await this.accountStorage.commit();
   }
 
   async createAccounts(accounts: AccountData[]): Promise<void> {
     for (const account of accounts) {
-      await this.accountStorage.createNewEntity(new AccountEntity(account));
+      await this.accountStorage.set(new AccountEntity(account));
     }
   }
 }

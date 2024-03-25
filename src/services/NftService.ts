@@ -8,6 +8,7 @@ import * as erc1155 from '../abi/erc1155';
 import { loadNftCollectionsMetadata, loadNftsMetadata } from '../utils/metadata';
 import { EntityRepository } from '../repositories/EntityRepository';
 import { filterNotFound, tryAggregate } from '../utils/helpers';
+import { sanitizeString } from '../utils/helpers';
 
 export class NftService {
   nftStorage: EntityRepository<NftEntity>;
@@ -53,8 +54,8 @@ export class NftService {
     await this.createNfts(notFoundNfts);
     await this.loadMetadataForNewCollections();
     await this.loadMetadataForNewNfts();
-    await this.nftCollectionStorage.commitNew();
-    await this.nftStorage.commitNew();
+    await this.nftCollectionStorage.commit();
+    await this.nftStorage.commit();
   }
 
   public async getCollectionsInNfts(nfts: NftData[]): Promise<Map<string, CollectionData>> {
@@ -92,7 +93,7 @@ export class NftService {
           this.getNftCollectionId(nft.contractAddress, nft.blockchain),
         ),
       });
-      await this.nftStorage.createNewEntity(nftEntity);
+      await this.nftStorage.set(nftEntity);
     }
   }
 
@@ -105,7 +106,7 @@ export class NftService {
         contractType: collectionData.contractType,
         createdAtBlock: collectionData.createdAtBlock,
       });
-      this.nftCollectionStorage.createNewEntity(nftCollenctionEntity);
+      this.nftCollectionStorage.set(nftCollenctionEntity);
     }
   }
 
@@ -145,7 +146,7 @@ export class NftService {
     for (let i = 0; i < contractUriResults.length; i++) {
       if (contractUriResults[i].success) collections[i].uri = contractUriResults[i].value;
       if (baseUriResults[i].success) {
-        let baseUri = baseUriResults[i].value;
+        let baseUri = sanitizeString(baseUriResults[i].value);
         if (baseUri) {
           baseUri = baseUri.trim();
           if (!baseUri.includes('{id}')) {
@@ -175,8 +176,8 @@ export class NftService {
       calls,
     );
     for (let i = 0; i < nameResults.length; i++) {
-      if (nameResults[i].success) collections[i].name = nameResults[i].value;
-      if (symbolResults[i].success) collections[i].symbol = symbolResults[i].value;
+      if (nameResults[i].success) collections[i].name = sanitizeString(nameResults[i].value);
+      if (symbolResults[i].success) collections[i].symbol = sanitizeString(symbolResults[i].value);
     }
   }
 
@@ -218,7 +219,7 @@ export class NftService {
       }
       results.forEach((res, i) => {
         if (res.success) {
-          nfts[i].uri = res.value;
+          nfts[i].uri = sanitizeString(res.value);
         } else {
           nfts[i].uri = null;
         }

@@ -27,7 +27,7 @@ export class EntityRepository<T extends Entity> {
     return { nftById: this.existingEntities, notFound };
   }
 
-  async createNewEntity(entity: T): Promise<void> {
+  async set(entity: T): Promise<void> {
     this.newEntities.set(entity.id, entity);
   }
 
@@ -41,11 +41,10 @@ export class EntityRepository<T extends Entity> {
     return entity;
   }
 
-  async commitNew(): Promise<void> {
-    await this.ctx.store.insert([...this.newEntities.values()]);
-  }
-
   async commit(): Promise<void> {
-    await this.ctx.store.upsert([...this.existingEntities.values(), ...this.newEntities.values()]);
+    const batches = splitIntoBatches([...this.newEntities.values()], 5000);
+    for (let batch of batches) {
+      await this.ctx.store.upsert(batch);
+    }
   }
 }

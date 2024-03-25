@@ -9,6 +9,8 @@ import { ZERO_ADDRESS } from '../utils/constants';
 
 export class TransferService {
   nftOwnerStorage: EntityRepository<NftOwnerEntity>;
+  tokenTransferStorage: EntityRepository<TokenTransferEntity>;
+  nftTransferStorage: EntityRepository<NftTransferEntity>;
   constructor(
     private ctx: Context,
     private accountService: AccountService,
@@ -16,6 +18,8 @@ export class TransferService {
     private tokenService: TokenService,
   ) {
     this.nftOwnerStorage = new EntityRepository(this.ctx, NftOwnerEntity);
+    this.tokenTransferStorage = new EntityRepository(this.ctx, TokenTransferEntity);
+    this.nftTransferStorage = new EntityRepository(this.ctx, NftTransferEntity);
   }
 
   private getNftOwnerId(ownerId: string, nftId: string): string {
@@ -40,7 +44,7 @@ export class TransferService {
 
   async processNftTransfers(nftsTransfers: TransferEvent[]): Promise<void> {
     await this.loadNftOwners(nftsTransfers);
-    const nftTransferEntities = [];
+
     for (const transfer of nftsTransfers) {
       try {
         const nftId = this.nftService.getNftId(transfer.contractAddress, transfer.blockchain, transfer.tokenId);
@@ -50,7 +54,7 @@ export class TransferService {
         if (!nft) {
           throw new Error(`NFT with id ${nftId} not found`);
         }
-        nftTransferEntities.push(
+        this.nftTransferStorage.set(
           new NftTransferEntity({
             id: transfer.id,
             fromAddress: fromAccount,
@@ -65,7 +69,7 @@ export class TransferService {
         console.error(`Error processing transfer: ${error.message}`);
       }
     }
-    await Promise.all([this.ctx.store.insert(nftTransferEntities), this.nftOwnerStorage.commit()]);
+    await Promise.all([this.nftTransferStorage.commit(), this.nftOwnerStorage.commit()]);
   }
 
   private async updateNftOwners(nftId: string, transfer: TransferEvent): Promise<void> {
@@ -79,11 +83,11 @@ export class TransferService {
 
     if (fromOwner) {
       fromOwner.amount -= transfer.amount;
-      await this.nftOwnerStorage.createNewEntity(fromOwner);
+      await this.nftOwnerStorage.set(fromOwner);
     }
     if (toOwner) {
       toOwner.amount += transfer.amount;
-      await this.nftOwnerStorage.createNewEntity(toOwner);
+      await this.nftOwnerStorage.set(toOwner);
     }
   }
 
@@ -98,18 +102,17 @@ export class TransferService {
           owner: await this.accountService.accountStorage.getOrFail(owner.ownerId),
           amount: BigInt(0),
         });
-        await this.nftOwnerStorage.createNewEntity(nftOwnerEntity);
+        await this.nftOwnerStorage.set(nftOwnerEntity);
       }
     }
   }
 
   async processTokenTransfers(tokensTransfers: TransferEvent[]): Promise<void> {
-    const tokenTransferEntities = [];
     for (const transfer of tokensTransfers) {
       const tokenId = this.tokenService.getTokenCollectionId(transfer.contractAddress, transfer.blockchain);
       const token = await this.tokenService.tokenCollectionStorage.get(tokenId);
       if (token) {
-        tokenTransferEntities.push(
+        this.tokenTransferStorage.set(
           new TokenTransferEntity({
             id: transfer.id,
             fromAddress: await this.accountService.accountStorage.getOrFail(transfer.from),
@@ -123,6 +126,6 @@ export class TransferService {
         throw new Error(`Token with id ${tokenId} not found`);
       }
     }
-    await this.ctx.store.insert(tokenTransferEntities);
+    await this.tokenTransferStorage.commit();
   }
 }

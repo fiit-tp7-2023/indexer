@@ -79,3 +79,31 @@ export interface MulticallContract {
   blockchain: Blockchain;
   batchSize: number;
 }
+
+export interface ContractFilter {
+  address: string;
+  type: ContractType;
+  blockchain: Blockchain;
+  name: string;
+}
+
+export interface IndexChainConfig {
+  block_range: { from: number; to?: number };
+  finality_confirmation: number;
+  filter_ERC20: boolean;
+  filter_ERC721: boolean;
+  filter_ERC1155: boolean;
+  contract_filter: ContractFilter[];
+}
+
+export interface RawMetadata {
+  name?: string;
+  description?: string;
+  image?: string;
+  thumbnailUri?: string;
+  mediaUri?: string;
+  external_link?: string;
+  external_url?: string;
+  animation_url?: string;
+  attributes?: JSON;
+}

@@ -48,3 +48,10 @@ export async function tryAggregate<Args extends any[], R>(
   ctx.log.error(`Failed to fetch data from multicall contract after ${retries} retries`);
   return [];
 }
+
+export function sanitizeString(input: string | undefined): string | undefined {
+  if (!input) return undefined;
+  let output = input.replace(/\0/g, '');
+  output = output.replace(/[^ -~]+/g, '');
+  return output;
+}
