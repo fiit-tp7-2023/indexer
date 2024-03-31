@@ -7,7 +7,6 @@ import { TransferService } from './services/TransferService';
 import { AccountService } from './services/AccountService';
 import { MockService } from './services/MockService';
 
-const fromBlock = config.block_range.from;
 processor.run(new TypeormDatabase({ supportHotBlocks: true }), async (ctx) => {
   const blockService = new BlockService(ctx, BLOCKCHAIN);
   const nftService = new NftService(ctx, blockService);

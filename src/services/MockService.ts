@@ -1,4 +1,4 @@
-import { ContractType, NftEntity, NftTransferEntity } from '../model';
+import { ContractType, NftEntity } from '../model';
 import { Context } from '../processor';
 import { ZERO_ADDRESS, mockNftCollections, mockNftTransfers, mockNfts } from '../utils/constants';
 import { MockNftTransfer, TransferEvent } from '../utils/interfaces';
