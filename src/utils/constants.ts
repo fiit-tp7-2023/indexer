@@ -1,5 +1,6 @@
 import { Blockchain, ContractType } from '../model';
 import { MulticallContract } from './interfaces';
+import { NftCollectionEntity, NftEntity } from '../model';
 
 export const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 
@@ -44,3 +45,60 @@ export const MULTICALL_CONTRACTS_BY_BLOCKCHAIN: Map<string, MulticallContract> =
     { address: '0xcA11bde05977b3631167028862bE2a173976CA11', blockchain: Blockchain.ETH, batchSize: 100 },
   ],
 ]);
+
+export const mockNftCollections = [
+  new NftCollectionEntity({
+    id: '0x0000000000000000000000000000000000000001_ETH',
+    address: '0x0000000000000000000000000000000000000001'.toLowerCase(),
+    name: 'Mock NFT Collection 1',
+    blockchain: Blockchain.ETH,
+    contractType: ContractType.ERC721,
+    owner: '0x0000000000000000000000000000000000000001'.toLowerCase(),
+    symbol: 'MNC1',
+    description: 'Mock NFT Collection 1 Description',
+    image: 'https://nftplazas.com/wp-content/uploads/2023/02/All-You-Need-to-Know-About-the-Checks-NFT-Collection.png',
+    externalLink: '',
+    uri: '',
+    baseUri: '',
+    createdAtBlock: 0,
+  }),
+];
+
+export const mockNfts = [
+  new NftEntity({
+    id: '0x0000000000000000000000000000000000000001_ETH_1',
+    tokenId: BigInt(1),
+    name: 'Mock NFT 1',
+    description: 'Mock NFT 1 Description',
+    image: 'https://logowik.com/content/uploads/images/nft-icon4363.logowik.com.webp',
+    animationUrl:
+      'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.behance.net%2Fgallery%2F149452517%2FMystics-Animating-A-NFT-Collection&psig=AOvVaw1M3fgzugK1D0EvIi11824G&ust=1711966790470000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCODQg7WjnoUDFQAAAAAdAAAAABAE',
+    externalUrl: '',
+    attributes: [
+      {
+        trait_type: 'Background',
+        value: 'Green',
+      },
+      {
+        trait_type: 'Eyes',
+        value: 'Blue',
+      },
+      {
+        trait_type: 'Mouth',
+        value: 'Smile',
+      },
+    ],
+    uri: '',
+    nftCollection: mockNftCollections[0],
+    createdAtBlock: 0,
+  }),
+];
+
+export const mockNftTransfers = [
+  {
+    mockNftCollectionIndex: 0,
+    mockNftIndex: 0,
+    amount: BigInt(1),
+    to: '0x0000000000000000000000000000000000000001'.toLowerCase(),
+  },
+];
