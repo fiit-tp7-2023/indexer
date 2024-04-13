@@ -74,6 +74,8 @@ type NftOwnerEntity @entity {
   owner: AccountEntity! @index
   amount: BigInt!
   nft: NftEntity!
+	acquiredAt: Int @index
+	acquiredAtBlock: Int @index
 }
 
 type NftTransferEntity @entity {
