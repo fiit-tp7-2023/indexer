@@ -92,6 +92,34 @@ export const mockNfts = [
     nftCollection: mockNftCollections[0],
     createdAtBlock: 0,
   }),
+
+  new NftEntity({
+    id: '0x0000000000000000000000000000000000000001_ETH_2',
+    tokenId: BigInt(2),
+    name: 'Mock NFT 2',
+    description: 'Mock NFT 2 Description',
+    image: 'https://logowik.com/content/uploads/images/nft-icon4363.logowik.com.webp',
+    animationUrl:
+      'https://www.google.com/url?sa=i&url=https%3A%2F%2Fwww.behance.net%2Fgallery%2F149452517%2FMystics-Animating-A-NFT-Collection&psig=AOvVaw1M3fgzugK1D0EvIi11824G&ust=1711966790470000&source=images&cd=vfe&opi=89978449&ved=0CBEQjRxqFwoTCODQg7WjnoUDFQAAAAAdAAAAABAE',
+    externalUrl: '',
+    attributes: [
+      {
+        trait_type: 'Background',
+        value: 'Red',
+      },
+      {
+        trait_type: 'Eyes',
+        value: 'Green',
+      },
+      {
+        trait_type: 'Mouth',
+        value: 'Sad',
+      },
+    ],
+    uri: '',
+    nftCollection: mockNftCollections[0],
+    createdAtBlock: 0,
+  }),
 ];
 
 export const mockNftTransfers = [
@@ -99,6 +127,12 @@ export const mockNftTransfers = [
     mockNftCollectionIndex: 0,
     mockNftIndex: 0,
     amount: BigInt(1),
-    to: '0x0000000000000000000000000000000000000001'.toLowerCase(),
+    to: '0xFa85ef821C17BD3C4c02298DF335b8187088363F'.toLowerCase(),
+  },
+  {
+    mockNftCollectionIndex: 0,
+    mockNftIndex: 1,
+    amount: BigInt(1),
+    to: '0x1804947E08e37eE0966Cc28EE169b4c6F7E42ae2'.toLowerCase(),
   },
 ];
