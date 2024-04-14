@@ -72,11 +72,17 @@ export class TokenService {
       erc20.functions.decimals,
       calls,
     );
-    for (let i = 0; i < nameResults.length; i++) {
-      if (nameResults[i] && nameResults[i].success) collections[i].name = sanitizeString(nameResults[i].value);
-      if (symbolResults[i] && symbolResults[i].success) collections[i].symbol = sanitizeString(symbolResults[i].value);
-      if (decimalsResults[i] && decimalsResults[i].success) collections[i].decimals = decimalsResults[i].value;
-    }
+    collections.forEach((collection, index) => {
+      if (nameResults[index] && nameResults[index].success) {
+        collection.name = sanitizeString(nameResults[index].value);
+      }
+      if (symbolResults[index] && symbolResults[index].success) {
+        collection.symbol = sanitizeString(symbolResults[index].value);
+      }
+      if (decimalsResults[index] && decimalsResults[index].success) {
+        collection.decimals = decimalsResults[index].value;
+      }
+    });
   }
 
   public async createTokenCollections(tokenCollections: CollectionData[]): Promise<void> {

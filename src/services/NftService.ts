@@ -175,10 +175,14 @@ export class NftService {
       erc721.functions.symbol,
       calls,
     );
-    for (let i = 0; i < nameResults.length; i++) {
-      if (nameResults[i].success) collections[i].name = sanitizeString(nameResults[i].value);
-      if (symbolResults[i].success) collections[i].symbol = sanitizeString(symbolResults[i].value);
-    }
+    collections.forEach((collection, index) => {
+      if (nameResults[index] && nameResults[index].success) {
+        collection.name = sanitizeString(nameResults[index].value);
+      }
+      if (symbolResults[index] && symbolResults[index].success) {
+        collection.symbol = sanitizeString(symbolResults[index].value);
+      }
+    });
   }
 
   private async loadTokensUri(ctx: Context, nfts: NftEntity[]): Promise<void> {
@@ -200,23 +204,13 @@ export class NftService {
       if (!nfts.length) continue;
       const calls = nfts.map((token) => [token.nftCollection.address, [token.tokenId]] as [string, any[]]);
       let results;
-      if (contractType == ContractType.ERC721) {
-        results = await tryAggregate(
-          ctx,
-          this.blockService.blockchain,
-          latestBlockNumber,
-          erc721.functions.tokenURI,
-          calls,
-        );
-      } else {
-        results = await tryAggregate(
-          ctx,
-          this.blockService.blockchain,
-          latestBlockNumber,
-          erc1155.functions.uri,
-          calls,
-        );
-      }
+      results = await tryAggregate(
+        ctx,
+        this.blockService.blockchain,
+        latestBlockNumber,
+        contractType === ContractType.ERC721 ? erc721.functions.tokenURI : erc1155.functions.uri,
+        calls,
+      );
       results.forEach((res, i) => {
         if (res.success) {
           nfts[i].uri = sanitizeString(res.value);
