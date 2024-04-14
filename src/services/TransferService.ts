@@ -6,7 +6,6 @@ import { AccountService } from './AccountService';
 import { NftService } from './NftService';
 import { TokenService } from './TokenService';
 import { ZERO_ADDRESS } from '../utils/constants';
-import { time } from 'console';
 
 export class TransferService {
   nftOwnerStorage: EntityRepository<NftOwnerEntity>;
