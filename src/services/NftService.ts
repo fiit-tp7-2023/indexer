@@ -143,19 +143,21 @@ export class NftService {
       calls,
     );
 
-    for (let i = 0; i < contractUriResults.length; i++) {
-      if (contractUriResults[i].success) collections[i].uri = contractUriResults[i].value;
-      if (baseUriResults[i].success) {
-        let baseUri = sanitizeString(baseUriResults[i].value);
+    collections.forEach((collection, index) => {
+      if (contractUriResults[index] && contractUriResults[index].success) {
+        collection.uri = contractUriResults[index].value;
+      }
+      if (baseUriResults[index] && baseUriResults[index].success) {
+        let baseUri = sanitizeString(baseUriResults[index].value);
         if (baseUri) {
           baseUri = baseUri.trim();
           if (!baseUri.includes('{id}')) {
             baseUri = baseUri + '{id}';
           }
         }
-        collections[i].baseUri = baseUri;
+        collection.baseUri = baseUri;
       }
-    }
+    });
   }
 
   private async loadCollectionData(collections: NftCollectionEntity[]): Promise<undefined> {
@@ -212,7 +214,7 @@ export class NftService {
         calls,
       );
       results.forEach((res, i) => {
-        if (res.success) {
+        if (res && res.success) {
           nfts[i].uri = sanitizeString(res.value);
         } else {
           nfts[i].uri = null;
