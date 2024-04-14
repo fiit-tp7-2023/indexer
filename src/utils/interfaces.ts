@@ -107,3 +107,9 @@ export interface RawMetadata {
   animation_url?: string;
   attributes?: JSON;
 }
+
+export interface MockNftTransfer {
+  mockNftIndex: number;
+  amount: BigInt;
+  to: string;
+}

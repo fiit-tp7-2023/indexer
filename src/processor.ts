@@ -15,7 +15,7 @@ import { Blockchain, ContractType } from './model';
 import { INDEX_CONFIG } from './utils/constants';
 export const BLOCKCHAIN = Blockchain.ETH;
 
-const config = INDEX_CONFIG.ETH;
+export const config = INDEX_CONFIG.ETH;
 
 export const processor = new EvmBatchProcessor()
   .setDataSource({
