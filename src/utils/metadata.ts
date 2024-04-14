@@ -11,7 +11,7 @@ export const IPFS_GATEWAYS = [
   'https://kodadot1.infura-ipfs.io',
 ];
 import { NftEntity, NftCollectionEntity } from '../model';
-import { ContractMetadata, RawMetadata, TokenMetadata, UrisBySource, ipfsUri } from './interfaces';
+import { ContractMetadata, RawMetadata, TokenMetadata, UrisBySource, IpfsUri } from './interfaces';
 import { splitIntoBatches } from './helpers';
 import { sanitizeString } from './helpers';
 
@@ -138,7 +138,7 @@ export async function fetchNonIpfsMetadata(
   return result;
 }
 
-export async function fetchIpfsMetadata(ctx: Context, ipfsUris: ipfsUri[]): Promise<Map<string, JSON>> {
+export async function fetchIpfsMetadata(ctx: Context, ipfsUris: IpfsUri[]): Promise<Map<string, JSON>> {
   const result = new Map<string, JSON>();
   await Promise.all(
     ipfsUris.map(async (uri) => {

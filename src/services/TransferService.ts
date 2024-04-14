@@ -80,13 +80,14 @@ export class TransferService {
       this.nftOwnerStorage.get(fromOwnerKey),
       this.nftOwnerStorage.get(toOwnerKey),
     ]);
-
     if (fromOwner) {
       fromOwner.amount -= transfer.amount;
       await this.nftOwnerStorage.set(fromOwner);
     }
     if (toOwner) {
       toOwner.amount += transfer.amount;
+      toOwner.acquiredAt = Math.floor(transfer.block.timestamp / 1000);
+      toOwner.acquiredAtBlock = transfer.block.height;
       await this.nftOwnerStorage.set(toOwner);
     }
   }

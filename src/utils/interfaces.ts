@@ -64,13 +64,13 @@ export interface TokenMetadata {
   attributes?: JSON;
 }
 
-export interface ipfsUri {
+export interface IpfsUri {
   uri: string;
   gatewayQueue: Generator<{ gateway: string; isLast: boolean }>;
 }
 
 export interface UrisBySource {
-  ipfsUris: ipfsUri[];
+  ipfsUris: IpfsUri[];
   nonIpfsUris: Map<string, string[]>;
 }
 

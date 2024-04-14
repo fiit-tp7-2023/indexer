@@ -22,4 +22,12 @@ export class NftOwnerEntity {
     @Index_()
     @ManyToOne_(() => NftEntity, {nullable: true})
     nft!: NftEntity
+
+    @Index_()
+    @Column_("int4", {nullable: true})
+    acquiredAt!: number | undefined | null
+
+    @Index_()
+    @Column_("int4", {nullable: true})
+    acquiredAtBlock!: number | undefined | null
 }
