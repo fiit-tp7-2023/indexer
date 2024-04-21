@@ -3,10 +3,8 @@ version: "3"
 services:
   db:
     image: postgres:15
-    expose:
-      - "${DB_PORT}"
     ports:
-      - "23798:5432"
+      - "${TOKENGRAM_INDEXER_DB_HOST_PORT:-9010}:${DB_PORT:-5432}"
     env_file:
       - .env
     volumes:
@@ -22,7 +20,7 @@ services:
     image: indexer
     ports:
       # GraphQL endpoint at port 4350
-      - "4350:4350"
+      - "${TOKENGRAM_INDEXER_API_HOST_PORT:-9000}:4350"
     env_file:
       - .env
     command: ["sqd", "serve:prod"]
@@ -34,7 +32,7 @@ services:
   processor:
     image: indexer
     ports:
-      - "3100:3000"
+      - "${TOKENGRAM_INDEXER_PROCESSOR_HOST_PORT:-9001}:3000"
     env_file:
       - .env
     command: ["sqd", "process:prod"]
