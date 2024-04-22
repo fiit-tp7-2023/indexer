@@ -110,6 +110,6 @@ export interface RawMetadata {
 
 export interface MockNftTransfer {
   mockNftIndex: number;
-  amount: BigInt;
+  amount: bigint;
   to: string;
 }

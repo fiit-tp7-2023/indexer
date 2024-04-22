@@ -1,6 +1,9 @@
 import { ContractType, NftEntity } from '../model';
 import { Context } from '../processor';
-import { ZERO_ADDRESS, mockNftCollections, mockNftTransfers, mockNfts } from '../utils/constants';
+import { ZERO_ADDRESS } from '../utils/constants';
+import { mockNftTransfers } from '../mock/transfer-mock';
+import { mockNfts } from '../mock/nft-mock';
+import { mockNftCollections } from '../mock/collection-mock';
 import { MockNftTransfer, TransferEvent } from '../utils/interfaces';
 import { TransferService } from './TransferService';
 import { v4 as uuid } from 'uuid';
@@ -33,7 +36,7 @@ export class MockService {
         to: transfer.to,
         contractAddress: mockedNfts[transfer.mockNftIndex].nftCollection.address,
         tokenId: mockedNfts[transfer.mockNftIndex].tokenId,
-        amount: BigInt(1),
+        amount: transfer.amount,
         blockchain: mockedNfts[transfer.mockNftIndex].nftCollection.blockchain,
         contractType: mockedNfts[transfer.mockNftIndex].nftCollection.contractType ?? ContractType.ERC721,
         block: emptyMockBlock,
