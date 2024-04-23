@@ -108,11 +108,11 @@ export class BlockService {
     const transfer = {
       id: uuidv4(),
       block: log.block,
-      from: from,
-      to: to,
+      from: from.toLowerCase(),
+      to: to.toLowerCase(),
       tokenId: tokenId,
       amount: amount,
-      contractAddress: log.address,
+      contractAddress: log.address.toLowerCase(),
       blockchain: BLOCKCHAIN,
       contractType: contractType,
     };
