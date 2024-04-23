@@ -3,7 +3,7 @@ import { mockNftCollections } from './collection-mock';
 
 export const mockNfts: NftEntity[] = [
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000001_ETH_1',
+    id: '0x0000000000000000000000000000000000000001_eth_1',
     tokenId: BigInt(1),
     name: 'BlockGames Dice MOCK',
     description:
@@ -34,7 +34,7 @@ export const mockNfts: NftEntity[] = [
   }),
 
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000001_ETH_2',
+    id: '0x0000000000000000000000000000000000000001_eth_2',
     tokenId: BigInt(2),
     name: 'RTFKT - MNLTH 🗿 MOCK',
     description:
@@ -69,7 +69,7 @@ export const mockNfts: NftEntity[] = [
     createdAtBlock: 0,
   }),
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000001_ETH_3',
+    id: '0x0000000000000000000000000000000000000001_eth_3',
     tokenId: BigInt(3),
     name: 'Azuki #3138 MOCK',
     image: 'ipfs://QmYDvPAXtiJg7s8JdRBSLWdgSphQdac8j1YuQNNxcGE1hg/3138.png',
@@ -108,7 +108,7 @@ export const mockNfts: NftEntity[] = [
     createdAtBlock: 0,
   }),
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000001_ETH_4',
+    id: '0x0000000000000000000000000000000000000001_eth_4',
     tokenId: BigInt(4),
     name: 'Azuki #3500 MOCK',
     image: 'ipfs://QmYDvPAXtiJg7s8JdRBSLWdgSphQdac8j1YuQNNxcGE1hg/3500.png',
@@ -155,7 +155,7 @@ export const mockNfts: NftEntity[] = [
     createdAtBlock: 0,
   }),
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000001_ETH_5',
+    id: '0x0000000000000000000000000000000000000001_eth_5',
     tokenId: BigInt(5),
     name: 'Pudgy Penguin #151 MOCK',
     description: 'A collection 8888 Cute Chubby Pudgy Penquins sliding around on the freezing ETH blockchain.',
@@ -187,7 +187,7 @@ export const mockNfts: NftEntity[] = [
     createdAtBlock: 0,
   }),
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000001_ETH_6',
+    id: '0x0000000000000000000000000000000000000001_eth_6',
     tokenId: BigInt(6),
     name: 'Pudgy Penguin #200 MOCK',
     description: 'A collection 8888 Cute Chubby Pudgy Penquins sliding around on the freezing ETH blockchain.',
@@ -219,7 +219,7 @@ export const mockNfts: NftEntity[] = [
     createdAtBlock: 0,
   }),
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000002_ETH_1',
+    id: '0x0000000000000000000000000000000000000002_eth_1',
     tokenId: BigInt(1),
     name: 'Seers Stone [PL] MOCK',
     description: 'Do not discard the traditions of old, for sometimes they illuminate the path ahead.',
@@ -254,7 +254,7 @@ export const mockNfts: NftEntity[] = [
     createdAtBlock: 0,
   }),
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000002_ETH_2',
+    id: '0x0000000000000000000000000000000000000002_eth_2',
     tokenId: BigInt(2),
     name: 'Prismatic Key MOCK',
     description: 'Change is a constant. The prismatic colors last only for a matter of moments',
@@ -289,7 +289,7 @@ export const mockNfts: NftEntity[] = [
     createdAtBlock: 0,
   }),
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000002_ETH_3',
+    id: '0x0000000000000000000000000000000000000002_eth_3',
     tokenId: BigInt(3),
     name: 'TE4 Interceptor [SE] MOCK',
     description:
@@ -323,7 +323,7 @@ export const mockNfts: NftEntity[] = [
     createdAtBlock: 0,
   }),
   new NftEntity({
-    id: '0x0000000000000000000000000000000000000002_ETH_4',
+    id: '0x0000000000000000000000000000000000000002_eth_4',
     tokenId: BigInt(4),
     name: 'Unstable Drone [SE] MOCK',
     description:

@@ -17,7 +17,7 @@ export class TokenService {
   }
 
   public getTokenCollectionId(contractAddress: string, blockchain: string): string {
-    return `${contractAddress}_${blockchain}`;
+    return `${contractAddress}_${blockchain}`.toLowerCase();
   }
 
   public getTokenCollectionsInTransferEvents(events: TransferEvent[]): Map<string, CollectionData> {

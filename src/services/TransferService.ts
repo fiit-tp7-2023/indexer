@@ -23,7 +23,7 @@ export class TransferService {
   }
 
   private getNftOwnerId(ownerId: string, nftId: string): string {
-    return `${ownerId}_${nftId}`;
+    return `${ownerId}_${nftId}`.toLowerCase();
   }
 
   async getNftOwnersInTransferEvents(events: TransferEvent[]): Promise<Map<string, NftOwnerData>> {
