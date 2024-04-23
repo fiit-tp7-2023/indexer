@@ -22,10 +22,10 @@ export class NftService {
   }
 
   public getNftId(contractAddress: string, blockchain: string, tokenId: bigint): string {
-    return `${contractAddress}_${blockchain}_${tokenId}`;
+    return `${contractAddress}_${blockchain}_${tokenId}`.toLowerCase();
   }
   public getNftCollectionId(contractAddress: string, blockchain: string): string {
-    return `${contractAddress}_${blockchain}`;
+    return `${contractAddress}_${blockchain}`.toLowerCase();
   }
 
   public async getNftsInTransferEvents(events: TransferEvent[]): Promise<Map<string, NftData>> {

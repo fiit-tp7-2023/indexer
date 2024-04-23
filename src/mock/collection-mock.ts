@@ -2,7 +2,7 @@ import { NftCollectionEntity, Blockchain, ContractType } from '../model';
 
 export const mockNftCollections: NftCollectionEntity[] = [
   new NftCollectionEntity({
-    id: '0x0000000000000000000000000000000000000001_ETH',
+    id: '0x0000000000000000000000000000000000000001_eth',
     address: '0x0000000000000000000000000000000000000001'.toLowerCase(),
     name: 'Mock NFT Collection 1',
     blockchain: Blockchain.ETH,
@@ -17,7 +17,7 @@ export const mockNftCollections: NftCollectionEntity[] = [
     createdAtBlock: 0,
   }),
   new NftCollectionEntity({
-    id: '0x0000000000000000000000000000000000000002_ETH',
+    id: '0x0000000000000000000000000000000000000002_eth',
     address: '0x0000000000000000000000000000000000000002'.toLowerCase(),
     name: 'Mock NFT Collection 2',
     blockchain: Blockchain.ETH,
