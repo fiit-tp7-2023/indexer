@@ -32,9 +32,9 @@ export class MockService {
     for (const transfer of mockedTrasfers) {
       transferEvents.push({
         id: uuid(),
-        from: ZERO_ADDRESS,
-        to: transfer.to,
-        contractAddress: mockedNfts[transfer.mockNftIndex].nftCollection.address,
+        from: ZERO_ADDRESS.toLowerCase(),
+        to: transfer.to.toLowerCase(),
+        contractAddress: mockedNfts[transfer.mockNftIndex].nftCollection.address.toLowerCase(),
         tokenId: mockedNfts[transfer.mockNftIndex].tokenId,
         amount: transfer.amount,
         blockchain: mockedNfts[transfer.mockNftIndex].nftCollection.blockchain,
