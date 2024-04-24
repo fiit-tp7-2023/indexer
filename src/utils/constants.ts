@@ -23,12 +23,12 @@ export const INDEX_CONFIG = {
         blockchain: Blockchain.ETH,
         name: 'PXQuest',
       },
-      {
-        address: '0x76BE3b62873462d2142405439777e971754E8E77'.toLowerCase(), // 11930426
-        type: ContractType.ERC1155,
-        blockchain: Blockchain.ETH,
-        name: 'Parallel Alpha',
-      }, // {
+      // {
+      //   address: '0x76BE3b62873462d2142405439777e971754E8E77'.toLowerCase(), // 11930426
+      //   type: ContractType.ERC1155,
+      //   blockchain: Blockchain.ETH,
+      //   name: 'Parallel Alpha',
+      // }, // {
       //   address: '0xdAC17F958D2ee523a2206206994597C13D831ec7'.toLowerCase(), // 463474
       //   type: ContractType.ERC20,
       //   blockchain: Blockchain.ETH,

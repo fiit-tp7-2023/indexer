@@ -35,11 +35,13 @@ export class BlockService {
             }
             break;
           case erc1155.events.TransferSingle.topic:
-            if (!this.isLogFiltered(log, ContractType.ERC1155)) this.handleTransferEvent(log, ContractType.ERC1155);
             break;
+          // if (!this.isLogFiltered(log, ContractType.ERC1155)) this.handleTransferEvent(log, ContractType.ERC1155);
+          // break;
           case erc1155.events.TransferBatch.topic:
-            if (!this.isLogFiltered(log, ContractType.ERC1155)) this.handleERC1155BatchTransfer(log);
             break;
+          // if (!this.isLogFiltered(log, ContractType.ERC1155)) this.handleERC1155BatchTransfer(log);
+          // break;
         }
       }
     }
